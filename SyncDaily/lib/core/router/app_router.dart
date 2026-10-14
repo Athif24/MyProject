@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/router/app_shell.dart';
 import 'package:sync_daily/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:sync_daily/features/chat/presentation/pages/chat_page.dart';
+import 'package:sync_daily/features/debug/presentation/pages/component_gallery_page.dart';
 import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/notes_page.dart';
 
@@ -50,6 +52,12 @@ class AppRouter {
           ),
         ],
       ),
+      if (kDebugMode)
+        GoRoute(
+          path: '/debug/components',
+          name: 'debug-components',
+          builder: (context, state) => const ComponentGalleryPage(),
+        ),
     ],
   );
 }

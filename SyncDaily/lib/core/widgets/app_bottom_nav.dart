@@ -8,11 +8,13 @@ import 'package:sync_daily/core/theme/app_sizes.dart';
 class AppBottomNav extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
+  final bool isOpen;
 
   const AppBottomNav({
     super.key,
     required this.currentIndex,
     required this.onTap,
+    this.isOpen = false,
   });
 
   @override
@@ -42,7 +44,7 @@ class AppBottomNav extends StatelessWidget {
                 label: 'Pesan',
               ),
               _CenterFab(
-                isOpen: false,
+                isOpen: isOpen,
                 onTap: () => onTap(4),
               ),
               _NavItem(
@@ -131,11 +133,13 @@ class _CenterFab extends StatelessWidget {
           child: Center(
             child: Transform.translate(
               offset: const Offset(0, -AppSizes.fabLift),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
                 height: AppSizes.fab,
                 width: AppSizes.fab,
                 decoration: BoxDecoration(
-                  gradient: AppGradients.primary,
+                  color: isOpen ? AppColors.ink : null,
+                  gradient: isOpen ? null : AppGradients.primary,
                   borderRadius: BorderRadius.circular(AppRadius.fab),
                   boxShadow: AppShadows.fab,
                 ),

@@ -10,4 +10,9 @@ class AppSizes {
   static const double fabLift = 14;
   static const double searchField = 48;
   static const double minTouchTarget = 44;
+  static const double avatar = 48;
+  static const double listItemIcon = 44;
+  static const double iconButton = 44;
+  static const double unreadDot = 8;
+  static const double unreadBadgeMin = 18;
 }

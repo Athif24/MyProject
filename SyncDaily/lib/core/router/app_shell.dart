@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
@@ -24,6 +25,18 @@ class AppShell extends StatelessWidget {
     return Scaffold(
       extendBody: true,
       body: child,
+      // Tombol sementara untuk membuka galeri komponen. Hanya ada saat debug
+      // (kDebugMode konstanta -> dihapus saat build rilis), jadi tidak muncul
+      // di build produksi.
+      floatingActionButton: kDebugMode
+          ? FloatingActionButton.small(
+              heroTag: 'debug-gallery-fab',
+              tooltip: 'Galeri Komponen',
+              onPressed: () => context.go('/debug/components'),
+              child: const Icon(Icons.widgets_outlined),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
       bottomNavigationBar: AppBottomNav(
         currentIndex: currentIndex,
         onTap: (index) {
