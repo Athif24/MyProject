@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sync_daily/core/database/app_database.dart';
+import 'package:sync_daily/features/auth/data/repositories/user_profile_repository_impl.dart';
+import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
+import 'package:sync_daily/features/debug/data/debug_data_seeder.dart';
 import 'package:sync_daily/features/notes/data/repositories/note_repository_impl.dart';
 import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
 import 'package:sync_daily/features/notifications/data/repositories/notification_repository_impl.dart';
@@ -14,25 +17,40 @@ final getIt = GetIt.instance;
 
 /// Daftarkan dependency di sini secara manual (mis. repository, bloc/cubit,
 /// service) saat fiturnya dikerjakan.
-Future<void> configureDependencies() async {
-  final database = AppDatabase();
-  getIt.registerSingleton<AppDatabase>(database);
+///
+/// [database] bisa diisi saat pengujian (mis. database in-memory). Bila null,
+/// database utama perangkat yang dipakai.
+Future<void> configureDependencies({AppDatabase? database}) async {
+  final db = database ?? AppDatabase();
+  getIt.registerSingleton<AppDatabase>(db);
 
   getIt.registerLazySingleton<TaskRepository>(
-    () => TaskRepositoryImpl(database.tasksDao, database.projectsDao),
+    () => TaskRepositoryImpl(db.tasksDao, db.projectsDao),
   );
   getIt.registerLazySingleton<ProjectRepository>(
-    () => ProjectRepositoryImpl(database.projectsDao),
+    () => ProjectRepositoryImpl(db.projectsDao),
   );
   getIt.registerLazySingleton<NoteRepository>(
-    () => NoteRepositoryImpl(database.notesDao),
+    () => NoteRepositoryImpl(db.notesDao),
   );
   getIt.registerLazySingleton<NotificationRepository>(
-    () => NotificationRepositoryImpl(database.notificationsDao),
+    () => NotificationRepositoryImpl(db.notificationsDao),
+  );
+  getIt.registerLazySingleton<UserProfileRepository>(
+    UserProfileRepositoryImpl.new,
   );
 
   if (kDebugMode) {
-    final version = await database.sqliteVersion();
+    getIt.registerLazySingleton<DebugDataSeeder>(
+      () => DebugDataSeeder(
+        database: db,
+        taskRepository: getIt<TaskRepository>(),
+        projectRepository: getIt<ProjectRepository>(),
+        notificationRepository: getIt<NotificationRepository>(),
+      ),
+    );
+
+    final version = await db.sqliteVersion();
     debugPrint('[SyncDaily] SQLite $version siap di perangkat.');
   }
 }

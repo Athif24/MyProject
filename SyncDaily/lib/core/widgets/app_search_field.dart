@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
+import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_radius.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/app_typography.dart';
@@ -35,7 +36,7 @@ class AppSearchField extends StatelessWidget {
             color: AppColors.textMuted,
           ),
           prefixIcon: const Icon(
-            Icons.search,
+            AppIcons.search,
             color: AppColors.textMuted,
             size: 20,
           ),

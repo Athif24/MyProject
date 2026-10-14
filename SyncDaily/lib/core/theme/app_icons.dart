@@ -1,0 +1,26 @@
+import 'package:flutter/material.dart';
+
+/// Peta nama semantik ikon ke [IconData].
+///
+/// Semua layar HANYA memakai [AppIcons] agar set ikon bisa diganti di satu
+/// tempat (mis. beralih ke ikon rounded atau custom) tanpa menyentuh widget.
+/// Sementara ini memakai ikon Material bergaya garis (outline).
+class AppIcons {
+  const AppIcons._();
+
+  static const IconData home = Icons.home_outlined;
+  static const IconData chat = Icons.chat_bubble_outline;
+  static const IconData notes = Icons.note_alt_outlined;
+  static const IconData calendar = Icons.calendar_today_outlined;
+  static const IconData bell = Icons.notifications_outlined;
+  static const IconData search = Icons.search;
+  static const IconData clock = Icons.access_time;
+  static const IconData flag = Icons.flag_outlined;
+  static const IconData folder = Icons.folder_outlined;
+  static const IconData check = Icons.check;
+  static const IconData back = Icons.arrow_back;
+  static const IconData add = Icons.add;
+  static const IconData more = Icons.more_horiz;
+  static const IconData chevronRight = Icons.chevron_right;
+  static const IconData dropdown = Icons.keyboard_arrow_down;
+}

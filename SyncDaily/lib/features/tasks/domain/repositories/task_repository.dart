@@ -23,7 +23,26 @@ abstract class TaskRepository {
 
   Future<Task?> getTask(String id);
 
-  Future<TaskSummary> getSummary({DateTime? periodStart, DateTime? periodEnd});
+  /// Versi reaktif dari [getSummary] untuk Beranda. Memancarkan ulang setiap
+  /// ada perubahan tugas maupun proyek.
+  ///
+  /// `periodStart`/`periodEnd` hanya memengaruhi hitungan jadwal; `null`
+  /// berarti tanpa batas (mis. filter "Semua"). Hari ini, semua tugas, dan
+  /// jumlah proyek tidak terpengaruh periode.
+  ///
+  /// `today` adalah waktu acuan untuk hitungan "hari ini" (biasanya jam yang
+  /// diinjeksi pemanggil agar bisa diuji); `null` berarti waktu sistem.
+  Stream<TaskSummary> watchSummary({
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    DateTime? today,
+  });
+
+  Future<TaskSummary> getSummary({
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    DateTime? today,
+  });
 
   Future<void> upsertTask(Task task);
 

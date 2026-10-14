@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sync_daily/core/di/injection.dart';
+import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
+import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_avatar.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
@@ -11,11 +14,30 @@ import 'package:sync_daily/core/widgets/unread_badge.dart';
 import 'package:sync_daily/core/widgets/unread_dot.dart';
 import 'package:sync_daily/main.dart';
 
+import 'helpers/test_dependencies.dart';
+import 'helpers/test_repositories.dart';
+
 Widget _wrap(Widget child) {
   return MaterialApp(home: Scaffold(body: Center(child: child)));
 }
 
 void main() {
+  late AppDatabase db;
+
+  setUpAll(() async {
+    await IdDate.ensureInitialized();
+  });
+
+  setUp(() async {
+    db = await setUpInMemoryDependencies();
+    registerMockRepositories();
+  });
+
+  tearDown(() async {
+    await getIt.reset();
+    await db.close();
+  });
+
   testWidgets('AppAvatar menampilkan inisial dari nama', (tester) async {
     await tester.pumpWidget(_wrap(const AppAvatar(name: 'Ayu Lestari')));
     await tester.pump();

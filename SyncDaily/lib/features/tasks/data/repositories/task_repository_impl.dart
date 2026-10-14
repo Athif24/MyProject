@@ -1,5 +1,7 @@
+import 'dart:async';
+
+import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/features/projects/data/daos/projects_dao.dart';
-import 'package:sync_daily/features/projects/domain/entities/project.dart';
 import 'package:sync_daily/features/tasks/data/daos/tasks_dao.dart';
 import 'package:sync_daily/features/tasks/data/mappers/task_mapper.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -60,17 +62,47 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Stream<TaskSummary> watchSummary({
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    DateTime? today,
+  }) {
+    final reference = today ?? DateTime.now();
+    return _combineLatest2<List<TaskRow>, ({int owned, int received}),
+        TaskSummary>(
+      _dao.watchActiveTasks(),
+      _projectsDao.watchRoleCounts(),
+      (rows, counts) =>
+          _buildSummary(rows, counts, periodStart, periodEnd, reference),
+    );
+  }
+
+  @override
   Future<TaskSummary> getSummary({
     DateTime? periodStart,
     DateTime? periodEnd,
+    DateTime? today,
   }) async {
     final rows = await _dao.watchActiveTasks().first;
-    final tasks = rows.map((row) => row.toEntity()).toList();
-    final today = DateTime.now();
+    final counts = await _projectsDao.watchRoleCounts().first;
 
-    final period = _weekRange(today);
-    final start = periodStart ?? period.start;
-    final end = periodEnd ?? period.end;
+    return _buildSummary(
+      rows,
+      counts,
+      periodStart,
+      periodEnd,
+      today ?? DateTime.now(),
+    );
+  }
+
+  TaskSummary _buildSummary(
+    List<TaskRow> rows,
+    ({int owned, int received}) counts,
+    DateTime? periodStart,
+    DateTime? periodEnd,
+    DateTime today,
+  ) {
+    final tasks = rows.map((row) => row.toEntity()).toList();
 
     final todayCount = tasks
         .where((task) =>
@@ -78,11 +110,16 @@ class TaskRepositoryImpl implements TaskRepository {
             TaskDateUtils.isOnDay(task, today))
         .length;
 
-    final scheduleCount = tasks
-        .where((task) =>
-            (task.type == TaskType.event || task.type == TaskType.reminder) &&
-            TaskDateUtils.isInRange(task, start, end))
-        .length;
+    final scheduleCount = tasks.where((task) {
+      if (task.type != TaskType.event && task.type != TaskType.reminder) {
+        return false;
+      }
+      final reference = TaskDateUtils.referenceDate(task);
+      if (reference == null) {
+        return false;
+      }
+      return TaskDateUtils.isWithinPeriod(reference, periodStart, periodEnd);
+    }).length;
 
     final allTasksCount = tasks
         .where((task) =>
@@ -91,15 +128,12 @@ class TaskRepositoryImpl implements TaskRepository {
             task.parentTaskId == null)
         .length;
 
-    final owned = await _projectsDao.countByRole(ProjectRole.owned);
-    final received = await _projectsDao.countByRole(ProjectRole.received);
-
     return TaskSummary(
       today: todayCount,
       schedule: scheduleCount,
       allTasks: allTasksCount,
-      projectsOwned: owned,
-      projectsReceived: received,
+      projectsOwned: counts.owned,
+      projectsReceived: counts.received,
     );
   }
 
@@ -144,14 +178,56 @@ class TaskRepositoryImpl implements TaskRepository {
     }
     return _dao.upsertRecurrence(recurrence.toCompanion());
   }
+}
 
-  /// Rentang minggu berjalan (Senin 00:00 sampai Minggu 23:59:59).
-  static ({DateTime start, DateTime end}) _weekRange(DateTime reference) {
-    final date = DateTime(reference.year, reference.month, reference.day);
-    final start = date.subtract(Duration(days: reference.weekday - 1));
-    final end = start
-        .add(const Duration(days: 6))
-        .add(const Duration(hours: 23, minutes: 59, seconds: 59));
-    return (start: start, end: end);
+/// Menggabungkan dua stream: memancarkan nilai baru setiap salah satu stream
+/// terbaru berubah. Dipakai agar [TaskRepositoryImpl.watchSummary] reaktif
+/// terhadap perubahan tugas maupun proyek tanpa menambah dependensi.
+Stream<R> _combineLatest2<A, B, R>(
+  Stream<A> a,
+  Stream<B> b,
+  R Function(A a, B b) combine,
+) {
+  late StreamController<R> controller;
+  A? latestA;
+  B? latestB;
+  var hasA = false;
+  var hasB = false;
+  StreamSubscription<A>? subA;
+  StreamSubscription<B>? subB;
+
+  void emit() {
+    if (hasA && hasB) {
+      controller.add(combine(latestA as A, latestB as B));
+    }
   }
+
+  controller = StreamController<R>(
+    onListen: () {
+      subA = a.listen(
+        (value) {
+          latestA = value;
+          hasA = true;
+          emit();
+        },
+        onError: controller.addError,
+        onDone: controller.close,
+      );
+      subB = b.listen(
+        (value) {
+          latestB = value;
+          hasB = true;
+          emit();
+        },
+        onError: controller.addError,
+        onDone: controller.close,
+      );
+    },
+    onCancel: () async {
+      await subA?.cancel();
+      await subB?.cancel();
+    },
+  );
+
+  return controller.stream;
 }

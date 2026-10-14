@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
+import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_radius.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/category_theme.dart';
@@ -16,6 +18,7 @@ import 'package:sync_daily/core/widgets/list_item_tile.dart';
 import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/core/widgets/unread_badge.dart';
 import 'package:sync_daily/core/widgets/unread_dot.dart';
+import 'package:sync_daily/features/debug/data/debug_data_seeder.dart';
 
 class ComponentGalleryPage extends StatefulWidget {
   const ComponentGalleryPage({super.key});
@@ -28,6 +31,22 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
   int currentIndex = 0;
   bool chipActive = true;
   bool navOpen = false;
+
+  Future<void> _fillSampleData() async {
+    await getIt<DebugDataSeeder>().seed();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Data contoh diisi')),
+    );
+  }
+
+  Future<void> _clearAllData() async {
+    await getIt<DebugDataSeeder>().clearAll();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Semua data dihapus')),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +61,7 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                 Row(
                   children: [
                     AppIconButton(
-                      icon: Icons.arrow_back,
+                      icon: AppIcons.back,
                       semanticLabel: 'Kembali',
                       onTap: () => context.canPop()
                           ? context.pop()
@@ -86,19 +105,19 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                 Row(
                   children: [
                     AppIconButton(
-                      icon: Icons.arrow_back,
+                      icon: AppIcons.back,
                       semanticLabel: 'Kembali',
                       onTap: () {},
                     ),
                     const SizedBox(width: 12),
                     AppIconButton(
-                      icon: Icons.notifications_outlined,
+                      icon: AppIcons.bell,
                       semanticLabel: 'Notifikasi',
                       onTap: () {},
                     ),
                     const SizedBox(width: 12),
                     const AppIconButton(
-                      icon: Icons.more_horiz,
+                      icon: AppIcons.more,
                       semanticLabel: 'Lainnya',
                     ),
                   ],
@@ -157,7 +176,7 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                 const SectionHeader(title: 'Item Daftar (Notifikasi)'),
                 const SizedBox(height: 12),
                 ListItemTile(
-                  icon: Icons.alarm_outlined,
+                  icon: AppIcons.clock,
                   iconBackground: AppColors.reminderBg,
                   iconColor: AppColors.reminderIcon,
                   title: 'Pengingat: Ambil obat',
@@ -168,7 +187,7 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                 ),
                 const SizedBox(height: 8),
                 ListItemTile(
-                  icon: Icons.flag_outlined,
+                  icon: AppIcons.flag,
                   iconBackground: AppColors.milestoneBg,
                   iconColor: AppColors.milestoneIcon,
                   title: 'Milestone tercapai',
@@ -237,6 +256,27 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                       setState(() => currentIndex = index);
                     }
                   },
+                ),
+                const SizedBox(height: 24),
+
+                const SectionHeader(title: 'Data (Debug)'),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _fillSampleData,
+                        child: const Text('Isi data contoh'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _clearAllData,
+                        child: const Text('Hapus semua data'),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 24),
               ],

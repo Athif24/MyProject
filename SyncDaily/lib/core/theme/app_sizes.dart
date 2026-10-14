@@ -3,6 +3,8 @@ class AppSizes {
 
   static const double pagePadding = 24;
   static const double itemSpacing = 8;
+  static const double sectionGap = 24;
+  static const double cardGap = 12;
   static const double navHeight = 68;
   static const double navIconBox = 46;
   static const double navItemPadding = 8;
@@ -15,4 +17,7 @@ class AppSizes {
   static const double iconButton = 44;
   static const double unreadDot = 8;
   static const double unreadBadgeMin = 18;
+  static const double statChartHeight = 32;
+  static const double iconSmall = 18;
+  static const double badgeOverlap = 4;
 }

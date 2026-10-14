@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
 import 'package:sync_daily/core/theme/app_gradients.dart';
+import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_radius.dart';
 import 'package:sync_daily/core/theme/app_shadows.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
@@ -32,13 +33,13 @@ class AppBottomNav extends StatelessWidget {
           child: Row(
             children: [
               _NavItem(
-                icon: Icons.home_outlined,
+                icon: AppIcons.home,
                 isActive: currentIndex == 0,
                 onTap: () => onTap(0),
                 label: 'Beranda',
               ),
               _NavItem(
-                icon: Icons.chat_bubble_outline,
+                icon: AppIcons.chat,
                 isActive: currentIndex == 1,
                 onTap: () => onTap(1),
                 label: 'Pesan',
@@ -48,13 +49,13 @@ class AppBottomNav extends StatelessWidget {
                 onTap: () => onTap(4),
               ),
               _NavItem(
-                icon: Icons.note_alt_outlined,
+                icon: AppIcons.notes,
                 isActive: currentIndex == 2,
                 onTap: () => onTap(2),
                 label: 'Catatan',
               ),
               _NavItem(
-                icon: Icons.calendar_today_outlined,
+                icon: AppIcons.calendar,
                 isActive: currentIndex == 3,
                 onTap: () => onTap(3),
                 label: 'Kalender',
@@ -147,7 +148,7 @@ class _CenterFab extends StatelessWidget {
                   turns: isOpen ? 0.125 : 0,
                   duration: const Duration(milliseconds: 250),
                   child: const Icon(
-                    Icons.add,
+                    AppIcons.add,
                     color: Colors.white,
                     size: 26,
                   ),

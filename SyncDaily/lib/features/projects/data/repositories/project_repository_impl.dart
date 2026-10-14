@@ -1,6 +1,7 @@
 import 'package:sync_daily/features/projects/data/daos/projects_dao.dart';
 import 'package:sync_daily/features/projects/data/mappers/project_mapper.dart';
 import 'package:sync_daily/features/projects/domain/entities/project.dart';
+import 'package:sync_daily/features/projects/domain/entities/project_with_counts.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 
 class ProjectRepositoryImpl implements ProjectRepository {
@@ -13,6 +14,11 @@ class ProjectRepositoryImpl implements ProjectRepository {
     return _dao
         .watchProjects()
         .map((rows) => rows.map((row) => row.toEntity()).toList());
+  }
+
+  @override
+  Stream<List<ProjectWithCounts>> watchProjectsWithCounts() {
+    return _dao.watchProjectsWithCounts();
   }
 
   @override
