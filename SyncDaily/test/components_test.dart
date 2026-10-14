@@ -196,4 +196,27 @@ void main() {
 
     expect(find.text('Galeri Komponen'), findsOneWidget);
   });
+
+  testWidgets('Galeri dibuka lewat tombol debug lalu kembali tanpa error',
+      (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const SyncDailyApp());
+    // Router global bersifat singleton; normalkan ke Beranda dulu.
+    AppRouter.router.go('/home');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.widgets_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('Galeri Komponen'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.arrow_back).first);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Galeri Komponen'), findsNothing);
+  });
 }

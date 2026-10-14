@@ -44,7 +44,9 @@ class _ComponentGalleryPageState extends State<ComponentGalleryPage> {
                     AppIconButton(
                       icon: Icons.arrow_back,
                       semanticLabel: 'Kembali',
-                      onTap: () => context.pop(),
+                      onTap: () => context.canPop()
+                          ? context.pop()
+                          : context.go('/'),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
