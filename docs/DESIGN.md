@@ -61,8 +61,8 @@ Font: Plus Jakarta Sans (400, 500, 600, 700, 800). Font DIBUNDEL di `assets/font
 - **Item notifikasi / chat**: kotak ikon atau avatar 44-48, judul satu baris (ellipsis), subjudul satu baris, waktu di kanan, titik atau badge ungu untuk belum dibaca.
 
 ## Layar yang sudah didesain
-1. **Beranda**: sapaan + nama, ikon lonceng dengan badge jumlah belum dibaca, "Overview" dengan filter (Minggu ini), 4 kartu statistik (Hari ini, Jadwal, Proyek, Semua tugas) dengan grafik garis kecil, seksi "Projects" dengan filter waktu, tab "Proyek saya" / "Diterima", kartu proyek (chip tanggal, jumlah task dan sub-task, menu titik tiga: Edit, Hapus).
-2. **Kalender**: tanggal terpilih + tombol bulan sebelumnya/berikutnya, grid bulan (hari terpilih lingkaran hitam, titik kecil berwarna untuk hari yang punya item), "Today's Task" dengan tombol tambah ungu, daftar item bertipe (To Do, Event, Reminder, Milestone) dengan jam.
+1. **Beranda**: sapaan + nama, ikon lonceng dengan badge jumlah belum dibaca, "Ringkasan" dengan filter (Minggu ini), 4 kartu statistik (Hari ini, Jadwal, Proyek, Semua tugas) dengan grafik garis kecil, seksi "Proyek" dengan filter waktu, tab "Proyek saya" / "Diterima", kartu proyek (chip tanggal, jumlah tugas dan subtugas, menu titik tiga: Ubah, Hapus).
+2. **Kalender**: tanggal terpilih + tombol bulan sebelumnya/berikutnya, grid bulan (hari terpilih lingkaran hitam, titik kecil berwarna untuk hari yang punya item), "Tugas Hari Ini" dengan tombol tambah ungu, daftar item bertipe (To Do, Event, Reminder, Milestone) dengan jam.
 3. **Pesan**: judul + tombol pesan baru, kolom cari, chip (Semua, Tim, Proyek, Belum dibaca), daftar percakapan (avatar inisial berwarna, nama, pratinjau, waktu, badge).
 4. **Catatan**: judul + tombol ganti tampilan, kolom cari, chip kategori, grid dua kolom kartu catatan pastel (label, judul, isi singkat, tanggal).
 5. **Buat baru**: latar gelap blur, panel bawah "Buat baru" berisi 6 ubin: Tugas, Acara, Pengingat, Milestone, Catatan, Proyek.

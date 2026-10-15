@@ -123,6 +123,38 @@ void main() {
     expect(find.text(AppStrings.taskDeleted), findsOneWidget);
   }
 
+  testWidgets('judul daftar memakai huruf kapital di awal tiap kata',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    AppRouter.router.go('/home');
+    await tester.pumpWidget(const SyncDailyApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is StatCard && widget.label == AppStrings.statToday,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Hari Ini'), findsOneWidget);
+
+    AppRouter.router.go('/home');
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is StatCard && widget.label == AppStrings.statAllTasks,
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Semua Tugas'), findsOneWidget);
+  });
+
   testWidgets('ketuk kartu, buka detail, hapus, urungkan', (tester) async {
     await pumpToDeletedList(tester);
 

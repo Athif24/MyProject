@@ -72,6 +72,10 @@ void main() {
 
       expect(find.text(entry.value), findsOneWidget);
       expect(taskDetailTitleFor(entry.key), entry.value);
+      if (entry.key == TaskType.task) {
+        // Judul seksi mengikuti EYD: unsur terikat "sub" ditulis serangkai.
+        expect(find.text('Subtugas'), findsOneWidget);
+      }
     });
   }
 }

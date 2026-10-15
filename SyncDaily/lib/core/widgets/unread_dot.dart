@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 
@@ -10,7 +11,7 @@ class UnreadDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Belum dibaca',
+      label: AppStrings.unreadIndicator,
       child: Container(
         height: size,
         width: size,

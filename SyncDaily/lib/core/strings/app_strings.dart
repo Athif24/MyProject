@@ -11,10 +11,18 @@ class AppStrings {
   static const String greetingEvening = 'Selamat sore';
   static const String greetingNight = 'Selamat malam';
 
+  // Label navigasi bawah dan judul halaman (dipakai bersama).
+  static const String screenHome = 'Beranda';
+  static const String screenChat = 'Pesan';
+  static const String screenNotes = 'Catatan';
+  static const String screenCalendar = 'Kalender';
+  static const String navClose = 'Tutup';
+  static const String unreadIndicator = 'Belum dibaca';
+
   // Beranda: header dan judul seksi.
   static const String notifications = 'Notifikasi';
-  static const String overview = 'Overview';
-  static const String projects = 'Projects';
+  static const String overview = 'Ringkasan';
+  static const String projects = 'Proyek';
   static const String filterPeriod = 'Filter periode';
   static const String filterProjectTime = 'Filter waktu proyek';
 
@@ -41,15 +49,15 @@ class AppStrings {
 
   // Kartu proyek.
   static const String projectMenu = 'Menu proyek';
-  static const String edit = 'Edit';
+  static const String edit = 'Ubah';
   static const String delete = 'Hapus';
   static const String cancel = 'Batal';
 
-  /// Contoh: `3 Task`.
-  static String taskCount(int count) => '$count Task';
+  /// Contoh: `3 Tugas`.
+  static String taskCount(int count) => '$count Tugas';
 
-  /// Contoh: `2 Sub-task`.
-  static String subtaskCount(int count) => '$count Sub-task';
+  /// Contoh: `2 Subtugas`.
+  static String subtaskCount(int count) => '$count Subtugas';
 
   // Keadaan kosong.
   static const String noProjects = 'Belum ada proyek';
@@ -88,7 +96,7 @@ class AppStrings {
   static const String description = 'Deskripsi';
   static const String priority = 'Prioritas';
   static const String project = 'Proyek';
-  static const String subtask = 'Sub-tugas';
+  static const String subtask = 'Subtugas';
   static const String recurrence = 'Pengulangan';
   static const String reminderLabel = 'Pengingat';
   static const String allDay = 'Sepanjang hari';
@@ -98,12 +106,13 @@ class AppStrings {
   static const String dueDate = 'Tenggat';
   static const String dueTarget = 'Target';
   static const String noProject = 'Tanpa proyek';
-  static const String addSubtask = 'Tambah sub-tugas';
+  static const String addSubtask = 'Tambah subtugas';
   static const String titleRequired = 'Judul wajib diisi';
   static const String startRequired = 'Waktu mulai wajib diisi';
   static const String endRequired = 'Waktu selesai wajib diisi';
   static const String dueRequired = 'Tenggat wajib diisi';
-  static const String endBeforeStart = 'Waktu selesai tidak boleh sebelum mulai';
+  static const String endBeforeStart =
+      'Waktu selesai tidak boleh sebelum waktu mulai';
   static const String none = 'Tidak';
   static const String daily = 'Harian';
   static const String weekly = 'Mingguan';
@@ -115,8 +124,8 @@ class AppStrings {
   static const String priorityLow = 'Rendah';
   static const String priorityMedium = 'Sedang';
   static const String priorityHigh = 'Tinggi';
-  static const String removeSubtask = 'Hapus sub-tugas';
-  static const String editSubtask = 'Ubah sub-tugas';
+  static const String removeSubtask = 'Hapus subtugas';
+  static const String editSubtask = 'Ubah subtugas';
   static const String pickDate = 'Pilih tanggal';
   static const String pickTime = 'Pilih waktu';
   static const String unsavedTitle = 'Buang perubahan?';
@@ -125,8 +134,8 @@ class AppStrings {
   static const String discard = 'Buang';
 
   // Daftar tugas sementara (F4b) dan layar detail.
-  static const String taskListToday = 'Hari ini';
-  static const String taskListAll = 'Semua tugas';
+  static const String taskListToday = 'Hari Ini';
+  static const String taskListAll = 'Semua Tugas';
   static const String back = 'Kembali';
   static const String noTasksToday = 'Belum ada item hari ini';
   static const String noTasksTodayDescription =
@@ -149,13 +158,13 @@ class AppStrings {
   static const String noDescription = 'Tanpa deskripsi';
   static const String noReminder = 'Tanpa pengingat';
   static const String noRecurrence = 'Tidak berulang';
-  static const String noSubtasks = 'Tidak ada sub-tugas';
+  static const String noSubtasks = 'Tidak ada subtugas';
   static const String yearly = 'Tahunan';
   static const String deleteTaskTitle = 'Hapus tugas?';
 
-  /// Contoh: `"Beli buku" beserta sub-tugasnya akan dihapus.`
+  /// Contoh: `"Beli buku" beserta subtugasnya akan dihapus.`
   static String deleteTaskBody(String title) =>
-      '"$title" beserta sub-tugasnya akan dihapus.';
+      '"$title" beserta subtugasnya akan dihapus.';
   static const String taskDeleted = 'Tugas dihapus';
   static const String undo = 'Urungkan';
 

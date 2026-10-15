@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/widgets/latar_layar.dart';
 
 class CalendarPage extends StatelessWidget {
@@ -13,7 +14,7 @@ class CalendarPage extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Center(
               child: Text(
-                'Kalender',
+                AppStrings.screenCalendar,
                 style: Theme.of(context).textTheme.displayMedium,
               ),
             ),

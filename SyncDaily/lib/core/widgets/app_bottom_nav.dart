@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
 import 'package:sync_daily/core/theme/app_gradients.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
@@ -36,13 +37,13 @@ class AppBottomNav extends StatelessWidget {
                 icon: AppIcons.home,
                 isActive: currentIndex == 0,
                 onTap: () => onTap(0),
-                label: 'Beranda',
+                label: AppStrings.screenHome,
               ),
               _NavItem(
                 icon: AppIcons.chat,
                 isActive: currentIndex == 1,
                 onTap: () => onTap(1),
-                label: 'Pesan',
+                label: AppStrings.screenChat,
               ),
               _CenterFab(
                 isOpen: isOpen,
@@ -52,13 +53,13 @@ class AppBottomNav extends StatelessWidget {
                 icon: AppIcons.notes,
                 isActive: currentIndex == 2,
                 onTap: () => onTap(2),
-                label: 'Catatan',
+                label: AppStrings.screenNotes,
               ),
               _NavItem(
                 icon: AppIcons.calendar,
                 isActive: currentIndex == 3,
                 onTap: () => onTap(3),
-                label: 'Kalender',
+                label: AppStrings.screenCalendar,
               ),
             ],
           ),
@@ -124,7 +125,7 @@ class _CenterFab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: isOpen ? 'Tutup' : 'Buat baru',
+      label: isOpen ? AppStrings.navClose : AppStrings.newItem,
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,

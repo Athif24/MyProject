@@ -116,8 +116,10 @@ void main() {
     expect(find.text(Greeting.forTime(DateTime.now())), findsOneWidget);
     expect(find.text('Pengguna'), findsOneWidget);
     expect(find.text('Proyek A'), findsOneWidget);
-    expect(find.text('1 Task'), findsOneWidget);
-    expect(find.text('1 Sub-task'), findsOneWidget);
+    expect(find.text('Ringkasan'), findsOneWidget);
+    expect(find.text('Proyek'), findsOneWidget);
+    expect(find.text('1 Tugas'), findsOneWidget);
+    expect(find.text('1 Subtugas'), findsOneWidget);
 
     final stats = statValues(tester);
     expect(stats['Hari ini'], 3);

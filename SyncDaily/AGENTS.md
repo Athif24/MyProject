@@ -29,6 +29,7 @@ Fitur: home, tasks, calendar, notes, notifications, projects, chat, auth, settin
 ## Aturan
 - UI mengikuti `DESIGN.md`. Semua warna, radius, dan gaya teks lewat theme; dilarang hardcode hex atau ukuran di widget.
 - Teks UI dalam Bahasa Indonesia. Semua teks UI disimpan di `lib/core/strings/app_strings.dart` (kelas `AppStrings`); seluruh layar wajib memakainya, jangan menulis teks langsung di widget.
+- Teks (EYD): judul layar dan judul seksi memakai huruf kapital di awal tiap kata (kecuali kata penghubung); bentuk terikat "sub" ditulis serangkai ("subtugas", bukan "sub-tugas"); hindari kata Inggris yang punya padanan baku (mis. "Ringkasan", bukan "Overview"; "Ubah", bukan "Edit"); teks keadaan kosong dan dialog memakai kalimat biasa.
 - Tidak ada logika bisnis di widget. Widget hanya menampilkan state dan mengirim event.
 - Repository menyembunyikan sumber data, supaya nanti bisa menambah sinkronisasi server tanpa menulis ulang UI.
 - Base URL API (mulai Fase 2) dibaca dari konfigurasi build (`--dart-define=API_BASE_URL=...`), jangan di-hardcode. Produksi wajib HTTPS.
