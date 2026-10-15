@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
@@ -95,6 +96,8 @@ class _HomeView extends StatelessWidget {
                   return _LoadedView(
                     state: state,
                     onShowSoon: () => _showSoon(context),
+                    onOpenToday: () => context.push('/tasks?filter=today'),
+                    onOpenAllTasks: () => context.push('/tasks?filter=all'),
                     onDelete: (item) => _confirmDelete(
                       context,
                       context.read<HomeCubit>(),
@@ -113,11 +116,15 @@ class _HomeView extends StatelessWidget {
 class _LoadedView extends StatelessWidget {
   final HomeState state;
   final VoidCallback onShowSoon;
+  final VoidCallback onOpenToday;
+  final VoidCallback onOpenAllTasks;
   final ValueChanged<ProjectWithCounts> onDelete;
 
   const _LoadedView({
     required this.state,
     required this.onShowSoon,
+    required this.onOpenToday,
+    required this.onOpenAllTasks,
     required this.onDelete,
   });
 
@@ -163,7 +170,7 @@ class _LoadedView extends StatelessWidget {
                     label: AppStrings.statToday,
                     value: summary?.today ?? 0,
                     category: TaskCategory.task,
-                    onTap: onShowSoon,
+                    onTap: onOpenToday,
                   ),
                 ),
                 const SizedBox(width: AppSizes.cardGap),
@@ -197,7 +204,7 @@ class _LoadedView extends StatelessWidget {
                     label: AppStrings.statAllTasks,
                     value: summary?.allTasks ?? 0,
                     category: TaskCategory.milestone,
-                    onTap: onShowSoon,
+                    onTap: onOpenAllTasks,
                   ),
                 ),
               ],

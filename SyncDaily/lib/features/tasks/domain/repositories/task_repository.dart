@@ -50,8 +50,13 @@ abstract class TaskRepository {
   /// saat berubah dari done, `completedAt` dikosongkan.
   Future<void> setStatus(String id, TaskStatus status);
 
-  /// Soft delete tugas beserta seluruh sub-task turunannya.
-  Future<void> softDeleteTask(String id);
+  /// Soft delete tugas beserta seluruh sub-task turunannya. Mengembalikan id
+  /// seluruh baris yang ikut terhapus (induk + turunan) agar bisa dipulihkan
+  /// lewat [restoreTasks] (aksi "Urungkan").
+  Future<List<String>> softDeleteTask(String id);
+
+  /// Memulihkan tugas (dan sub-task) yang sebelumnya ter-soft-delete.
+  Future<void> restoreTasks(List<String> ids);
 
   Future<List<TaskReminder>> getReminders(String taskId);
 

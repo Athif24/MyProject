@@ -43,8 +43,11 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
     );
   }
 
-  /// Soft delete tugas beserta seluruh sub-task turunannya.
-  Future<void> softDeleteTaskCascade(String id, DateTime now) async {
+  /// Soft delete tugas beserta seluruh sub-task turunannya. Mengembalikan id
+  /// seluruh baris yang terhapus (induk + turunan) agar bisa dipulihkan lewat
+  /// [restoreTasks].
+  Future<List<String>> softDeleteTaskCascade(String id, DateTime now) async {
+    final deleted = <String>[id];
     await (update(tasks)..where((t) => t.id.equals(id))).write(
       TasksCompanion(
         deletedAt: Value(now),
@@ -55,8 +58,22 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
           ..where((t) => t.parentTaskId.equals(id) & t.deletedAt.isNull()))
         .get();
     for (final child in children) {
-      await softDeleteTaskCascade(child.id, now);
+      deleted.addAll(await softDeleteTaskCascade(child.id, now));
     }
+    return deleted;
+  }
+
+  /// Memulihkan tugas yang sebelumnya di-soft-delete (mengosongkan `deletedAt`).
+  Future<void> restoreTasks(List<String> ids, DateTime now) async {
+    if (ids.isEmpty) {
+      return;
+    }
+    await (update(tasks)..where((t) => t.id.isIn(ids))).write(
+      TasksCompanion(
+        deletedAt: const Value(null),
+        updatedAt: Value(now),
+      ),
+    );
   }
 
   Future<List<TaskReminderRow>> remindersFor(String taskId) {

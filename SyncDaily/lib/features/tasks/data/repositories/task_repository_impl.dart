@@ -11,6 +11,7 @@ import 'package:sync_daily/features/tasks/domain/entities/task_reminder.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_summary.dart';
 import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
 import 'package:sync_daily/features/tasks/domain/task_date_utils.dart';
+import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
 
 class TaskRepositoryImpl implements TaskRepository {
   final TasksDao _dao;
@@ -106,8 +107,7 @@ class TaskRepositoryImpl implements TaskRepository {
 
     final todayCount = tasks
         .where((task) =>
-            task.status != TaskStatus.done &&
-            TaskDateUtils.isOnDay(task, today))
+            TaskListFilters.matches(task, TaskListFilter.today, today))
         .length;
 
     final scheduleCount = tasks.where((task) {
@@ -122,10 +122,7 @@ class TaskRepositoryImpl implements TaskRepository {
     }).length;
 
     final allTasksCount = tasks
-        .where((task) =>
-            (task.type == TaskType.task || task.type == TaskType.milestone) &&
-            task.status != TaskStatus.done &&
-            task.parentTaskId == null)
+        .where((task) => TaskListFilters.matches(task, TaskListFilter.allTasks, today))
         .length;
 
     return TaskSummary(
@@ -145,8 +142,12 @@ class TaskRepositoryImpl implements TaskRepository {
       _dao.setStatus(id, status, DateTime.now().toUtc());
 
   @override
-  Future<void> softDeleteTask(String id) =>
+  Future<List<String>> softDeleteTask(String id) =>
       _dao.softDeleteTaskCascade(id, DateTime.now().toUtc());
+
+  @override
+  Future<void> restoreTasks(List<String> ids) =>
+      _dao.restoreTasks(ids, DateTime.now().toUtc());
 
   @override
   Future<List<TaskReminder>> getReminders(String taskId) async {

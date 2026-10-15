@@ -92,6 +92,7 @@ class AppStrings {
   static const String recurrence = 'Pengulangan';
   static const String reminderLabel = 'Pengingat';
   static const String allDay = 'Sepanjang hari';
+  static const String yes = 'Ya';
   static const String startAt = 'Mulai';
   static const String endAt = 'Selesai';
   static const String dueDate = 'Tenggat';
@@ -122,4 +123,42 @@ class AppStrings {
   static const String unsavedBody = 'Perubahan yang belum disimpan akan hilang.';
   static const String keepEditing = 'Lanjut mengubah';
   static const String discard = 'Buang';
+
+  // Daftar tugas sementara (F4b) dan layar detail.
+  static const String taskListToday = 'Hari ini';
+  static const String taskListAll = 'Semua tugas';
+  static const String back = 'Kembali';
+  static const String noTasksToday = 'Belum ada item hari ini';
+  static const String noTasksTodayDescription =
+      'Item yang jatuh tempo hari ini akan tampil di sini.';
+  static const String noAllTasks = 'Belum ada tugas';
+  static const String noAllTasksDescription =
+      'Tugas dan milestone yang belum selesai akan tampil di sini.';
+  // Judul layar detail mengikuti tipe item (kapital di awal tiap kata).
+  static const String detailTask = 'Detail Tugas';
+  static const String detailEvent = 'Detail Acara';
+  static const String detailReminder = 'Detail Pengingat';
+  static const String detailMilestone = 'Detail Milestone';
+  static const String taskNotFound = 'Item tidak ditemukan';
+  static const String taskNotFoundDescription =
+      'Item ini sudah dihapus atau tidak tersedia.';
+  static const String markDone = 'Tandai selesai';
+  static const String markUndone = 'Tandai belum selesai';
+  static const String statusDone = 'Selesai';
+  static const String statusNotDone = 'Belum selesai';
+  static const String noDescription = 'Tanpa deskripsi';
+  static const String noReminder = 'Tanpa pengingat';
+  static const String noRecurrence = 'Tidak berulang';
+  static const String noSubtasks = 'Tidak ada sub-tugas';
+  static const String yearly = 'Tahunan';
+  static const String deleteTaskTitle = 'Hapus tugas?';
+
+  /// Contoh: `"Beli buku" beserta sub-tugasnya akan dihapus.`
+  static String deleteTaskBody(String title) =>
+      '"$title" beserta sub-tugasnya akan dihapus.';
+  static const String taskDeleted = 'Tugas dihapus';
+  static const String undo = 'Urungkan';
+
+  /// Contoh: `15 menit sebelum` (offset yang tidak punya label tetap).
+  static String remindMinutesBefore(int minutes) => '$minutes menit sebelum';
 }

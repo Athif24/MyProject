@@ -8,7 +8,10 @@ import 'package:sync_daily/features/debug/presentation/pages/component_gallery_p
 import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/notes_page.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
+import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
+import 'package:sync_daily/features/tasks/presentation/detail/pages/task_detail_page.dart';
 import 'package:sync_daily/features/tasks/presentation/form/pages/task_form_page.dart';
+import 'package:sync_daily/features/tasks/presentation/list/pages/task_list_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -61,12 +64,27 @@ class AppRouter {
           builder: (context, state) => const ComponentGalleryPage(),
         ),
       GoRoute(
+        path: '/tasks',
+        name: 'task-list',
+        builder: (context, state) => TaskListPage(
+          filter: _parseFilter(state.uri.queryParameters['filter']),
+        ),
+      ),
+      // Harus sebelum `/tasks/:id` agar "new" tidak dibaca sebagai id.
+      GoRoute(
         path: '/tasks/new',
         name: 'task-new',
         builder: (context, state) {
           final type = state.uri.queryParameters['type'];
           return TaskFormPage(initialType: _parseType(type));
         },
+      ),
+      GoRoute(
+        path: '/tasks/:id',
+        name: 'task-detail',
+        builder: (context, state) => TaskDetailPage(
+          taskId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
         path: '/tasks/:id/edit',
@@ -77,6 +95,15 @@ class AppRouter {
       ),
     ],
   );
+}
+
+TaskListFilter _parseFilter(String? value) {
+  switch (value) {
+    case 'all':
+      return TaskListFilter.allTasks;
+    default:
+      return TaskListFilter.today;
+  }
 }
 
 TaskType _parseType(String? value) {
