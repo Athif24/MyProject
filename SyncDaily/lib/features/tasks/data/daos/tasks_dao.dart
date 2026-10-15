@@ -96,6 +96,19 @@ class TasksDao extends DatabaseAccessor<AppDatabase> with _$TasksDaoMixin {
         .getSingleOrNull();
   }
 
+  /// Aturan pengulangan milik item yang belum dihapus.
+  ///
+  /// Dipakai Kalender untuk memperluas kemunculan tanpa menulis salinan ke
+  /// database. Query sub-nya menyaring item yang sudah di-soft-delete.
+  Stream<List<TaskRecurrenceRow>> watchRecurrences() {
+    final activeTaskIds = selectOnly(tasks)
+      ..addColumns([tasks.id])
+      ..where(tasks.deletedAt.isNull());
+    return (select(taskRecurrences)
+          ..where((r) => r.taskId.isInQuery(activeTaskIds)))
+        .watch();
+  }
+
   Future<void> upsertRecurrence(TaskRecurrencesCompanion companion) {
     return into(taskRecurrences).insertOnConflictUpdate(companion);
   }

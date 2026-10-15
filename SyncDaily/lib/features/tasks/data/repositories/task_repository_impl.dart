@@ -173,6 +173,13 @@ class TaskRepositoryImpl implements TaskRepository {
   }
 
   @override
+  Stream<List<TaskRecurrence>> watchRecurrences() {
+    return _dao
+        .watchRecurrences()
+        .map((rows) => rows.map((row) => row.toEntity()).toList());
+  }
+
+  @override
   Future<void> setRecurrence(String taskId, TaskRecurrence? recurrence) {
     if (recurrence == null) {
       return _dao.deleteRecurrence(taskId);

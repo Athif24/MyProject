@@ -52,6 +52,7 @@ class TaskFormCubit extends Cubit<TaskFormState> {
   Future<void> init({
     TaskType initialType = TaskType.task,
     String? taskId,
+    DateTime? initialDate,
   }) async {
     await _projectsSub?.cancel();
     _projectsSub = _projectRepository.watchProjects().listen(
@@ -64,6 +65,28 @@ class TaskFormCubit extends Cubit<TaskFormState> {
       await _loadTask(taskId);
     } else {
       _applyTypeDefaults(initialType, isEditing: false);
+      if (initialDate != null) {
+        _applyInitialDate(initialDate);
+      }
+    }
+  }
+
+  /// Mengisi kolom tanggal sesuai tipe (Acara/Pengingat -> Mulai, Tugas/
+  /// Milestone -> Tenggat) dengan tanggal awal dari Kalender. Hanya tanggal
+  /// awalnya yang diisi; aturan validasi dan simpan tidak berubah.
+  void _applyInitialDate(DateTime initialDate) {
+    final date = DateTime(
+      initialDate.year,
+      initialDate.month,
+      initialDate.day,
+    );
+    switch (state.type) {
+      case TaskType.event:
+      case TaskType.reminder:
+        emit(state.copyWith(startAt: date));
+      case TaskType.task:
+      case TaskType.milestone:
+        emit(state.copyWith(dueAt: date));
     }
   }
 

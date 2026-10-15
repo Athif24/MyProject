@@ -170,4 +170,23 @@ class AppStrings {
 
   /// Contoh: `15 menit sebelum` (offset yang tidak punya label tetap).
   static String remindMinutesBefore(int minutes) => '$minutes menit sebelum';
+
+  // Kalender (F5).
+  static const String previousMonth = 'Bulan sebelumnya';
+  static const String nextMonth = 'Bulan berikutnya';
+  static const String addItem = 'Tambah item';
+  static const String calendarTodaySection = 'Tugas Hari Ini';
+
+  /// Contoh: `Tugas 14 Okt` (tanggal selain hari ini).
+  static String calendarDateSection(String dayMonth) => 'Tugas $dayMonth';
+
+  static const String noItemsOnDay = 'Belum ada item';
+  static const String noItemsOnDayDescription =
+      'Item pada tanggal ini akan tampil di sini.';
+
+  /// Contoh: `Mulai 09.00` (hari pertama acara lintas hari).
+  static String startsAtTime(String clock) => 'Mulai $clock';
+
+  /// Contoh: `Sampai 17.00` (hari terakhir acara lintas hari).
+  static String endsAtTime(String clock) => 'Sampai $clock';
 }

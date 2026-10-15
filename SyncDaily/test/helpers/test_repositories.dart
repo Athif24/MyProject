@@ -4,6 +4,8 @@ import 'package:sync_daily/features/auth/domain/entities/user_profile.dart';
 import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
 import 'package:sync_daily/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
+import 'package:sync_daily/features/tasks/domain/entities/task.dart';
+import 'package:sync_daily/features/tasks/domain/entities/task_recurrence.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_summary.dart';
 import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
 
@@ -36,6 +38,12 @@ void registerMockRepositories() {
       today: any(named: 'today'),
     ),
   ).thenAnswer((_) => Stream.value(_emptySummary));
+
+  // Dipakai layar Kalender.
+  when(() => taskRepository.watchAllTasks())
+      .thenAnswer((_) => Stream<List<Task>>.value(const []));
+  when(() => taskRepository.watchRecurrences())
+      .thenAnswer((_) => Stream<List<TaskRecurrence>>.value(const []));
 
   final projectRepository = MockProjectRepository();
   when(() => projectRepository.watchProjectsWithCounts())

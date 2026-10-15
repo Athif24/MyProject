@@ -76,7 +76,10 @@ class AppRouter {
         name: 'task-new',
         builder: (context, state) {
           final type = state.uri.queryParameters['type'];
-          return TaskFormPage(initialType: _parseType(type));
+          return TaskFormPage(
+            initialType: _parseType(type),
+            initialDate: _parseDate(state.uri.queryParameters['date']),
+          );
         },
       ),
       GoRoute(
@@ -104,6 +107,19 @@ TaskListFilter _parseFilter(String? value) {
     default:
       return TaskListFilter.today;
   }
+}
+
+/// Membaca parameter `?date=` (format ISO `YYYY-MM-DD`, waktu lokal) untuk
+/// mengisi tanggal awal form. Nilai yang tidak sah diabaikan.
+DateTime? _parseDate(String? value) {
+  if (value == null) {
+    return null;
+  }
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) {
+    return null;
+  }
+  return DateTime(parsed.year, parsed.month, parsed.day);
 }
 
 TaskType _parseType(String? value) {

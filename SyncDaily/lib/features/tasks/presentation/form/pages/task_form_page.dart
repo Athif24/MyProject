@@ -25,10 +25,15 @@ class TaskFormPage extends StatelessWidget {
   final TaskType initialType;
   final String? taskId;
 
+  /// Tanggal awal (tanpa jam) yang diisikan ke kolom tanggal tipe yang dipilih.
+  /// Dipakai Kalender lewat `?date=`; `null` berarti perilaku lama.
+  final DateTime? initialDate;
+
   const TaskFormPage({
     super.key,
     this.initialType = TaskType.task,
     this.taskId,
+    this.initialDate,
   });
 
   @override
@@ -37,7 +42,11 @@ class TaskFormPage extends StatelessWidget {
       create: (_) => TaskFormCubit(
         taskRepository: getIt(),
         projectRepository: getIt(),
-      )..init(initialType: initialType, taskId: taskId),
+      )..init(
+          initialType: initialType,
+          taskId: taskId,
+          initialDate: initialDate,
+        ),
       child: _TaskFormView(taskId: taskId),
     );
   }

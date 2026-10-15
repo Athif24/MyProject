@@ -405,4 +405,113 @@ void main() {
       await cubit.close();
     });
   });
+
+  group('tanggal awal dari Kalender', () {
+    Future<TaskFormCubit> startWithDate({
+      TaskType type = TaskType.task,
+      DateTime? initialDate,
+      String? taskId,
+    }) async {
+      final cubit = buildCubit();
+      await cubit.init(
+        initialType: type,
+        taskId: taskId,
+        initialDate: initialDate,
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      return cubit;
+    }
+
+    test('tugas: tenggat terisi tanggal awal tanpa jam', () async {
+      final cubit = await startWithDate(
+        initialDate: DateTime(2026, 10, 14, 13, 45),
+      );
+
+      expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.startAt, isNull);
+
+      await cubit.close();
+    });
+
+    test('milestone: tenggat terisi dan tetap sepanjang hari', () async {
+      final cubit = await startWithDate(
+        type: TaskType.milestone,
+        initialDate: DateTime(2026, 10, 14),
+      );
+
+      expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.isAllDay, isTrue);
+
+      await cubit.close();
+    });
+
+    test('acara: waktu mulai terisi, waktu selesai dibiarkan kosong', () async {
+      final cubit = await startWithDate(
+        type: TaskType.event,
+        initialDate: DateTime(2026, 10, 14),
+      );
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 14));
+      expect(cubit.state.endAt, isNull);
+
+      await cubit.close();
+    });
+
+    test('pengingat: waktu mulai terisi', () async {
+      final cubit = await startWithDate(
+        type: TaskType.reminder,
+        initialDate: DateTime(2026, 10, 14),
+      );
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 14));
+
+      await cubit.close();
+    });
+
+    test('tanpa tanggal awal, kolom tanggal tetap kosong', () async {
+      final cubit = await startWithDate();
+
+      expect(cubit.state.dueAt, isNull);
+      expect(cubit.state.startAt, isNull);
+
+      await cubit.close();
+    });
+
+    test('tanggal awal tidak menimpa data pada mode ubah', () async {
+      await taskRepo.upsertTask(Task(
+        id: 't1',
+        title: 'Lama',
+        type: TaskType.task,
+        dueAt: DateTime(2026, 10, 20, 9),
+        createdAt: fixedNow.toUtc(),
+        updatedAt: fixedNow.toUtc(),
+      ));
+
+      final cubit = await startWithDate(
+        taskId: 't1',
+        initialDate: DateTime(2026, 10, 14),
+      );
+
+      expect(cubit.state.dueAt, DateTime(2026, 10, 20, 9));
+
+      await cubit.close();
+    });
+
+    test('milestone dengan tanggal awal disimpan sebagai UTC tengah malam',
+        () async {
+      final cubit = await startWithDate(
+        type: TaskType.milestone,
+        initialDate: DateTime(2026, 10, 14),
+      );
+      cubit.setTitle('Target');
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.dueAt!.toUtc(), DateTime.utc(2026, 10, 14));
+      expect(TaskDateUtils.isOnDay(task, DateTime(2026, 10, 14)), isTrue);
+
+      await cubit.close();
+    });
+  });
 }

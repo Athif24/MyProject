@@ -17,6 +17,10 @@ class ListItemTile extends StatelessWidget {
   final Color? iconColor;
   final int unreadCount;
   final bool isUnread;
+
+  /// True bila item sudah selesai: judulnya dicoret (dipakai Kalender, yang
+  /// tetap menampilkan item selesai). Bawaan `false` agar tampilan lama sama.
+  final bool isCompleted;
   final VoidCallback? onTap;
 
   const ListItemTile({
@@ -30,6 +34,7 @@ class ListItemTile extends StatelessWidget {
     this.iconColor,
     this.unreadCount = 0,
     this.isUnread = false,
+    this.isCompleted = false,
     this.onTap,
   }) : assert(
           icon != null || avatarName != null,
@@ -71,7 +76,12 @@ class ListItemTile extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: AppTypography.textTheme.titleMedium,
+                      style: isCompleted
+                          ? AppTypography.textTheme.titleMedium?.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: AppColors.textMuted,
+                            )
+                          : AppTypography.textTheme.titleMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),

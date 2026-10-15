@@ -27,6 +27,14 @@ class IdDate {
   static String full(DateTime date) =>
       DateFormat('d MMM yyyy', 'id_ID').format(date);
 
+  /// Contoh: `Oktober 2026` (judul bulan Kalender).
+  static String monthYear(DateTime date) =>
+      DateFormat('MMMM yyyy', 'id_ID').format(date);
+
+  /// Contoh: `Sen` (kepala kolom grid bulan, `id_ID`).
+  static String weekdayShort(DateTime date) =>
+      DateFormat('E', 'id_ID').format(date);
+
   /// Rentang tanggal ringkas: `14 Okt` bila sama, `14 – 20 Okt` bila satu bulan,
   /// atau `28 Sep – 3 Okt` bila berbeda bulan.
   static String range(DateTime? start, DateTime? end) {

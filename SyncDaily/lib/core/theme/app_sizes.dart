@@ -20,4 +20,10 @@ class AppSizes {
   static const double statChartHeight = 32;
   static const double iconSmall = 18;
   static const double badgeOverlap = 4;
+
+  // Kalender (grid bulan).
+  static const double calendarCellHeight = 44;
+  static const double calendarDayCircle = 32;
+  static const double calendarDot = 5;
+  static const double calendarDotGap = 3;
 }

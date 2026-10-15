@@ -65,6 +65,10 @@ abstract class TaskRepository {
 
   Future<TaskRecurrence?> getRecurrence(String taskId);
 
+  /// Semua aturan pengulangan milik item yang belum dihapus (dipakai Kalender
+  /// untuk memperluas kemunculan tanpa menulis salinan ke database).
+  Stream<List<TaskRecurrence>> watchRecurrences();
+
   /// Menyimpan aturan pengulangan. Mengirim `null` menghapus aturan.
   Future<void> setRecurrence(String taskId, TaskRecurrence? recurrence);
 }

@@ -24,6 +24,7 @@ class AppIcons {
   static const IconData edit = Icons.edit_outlined;
   static const IconData close = Icons.close;
   static const IconData delete = Icons.delete_outline;
+  static const IconData chevronLeft = Icons.chevron_left;
   static const IconData chevronRight = Icons.chevron_right;
   static const IconData dropdown = Icons.keyboard_arrow_down;
 }
