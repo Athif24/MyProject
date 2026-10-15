@@ -33,4 +33,10 @@ class AppSizes {
 
   /// Ikon panah buka/tutup daftar subtugas di kartu agenda.
   static const double calendarArrowIcon = 22;
+
+  /// Tinggi kartu catatan pada grid dua kolom layar Catatan.
+  static const double noteCardHeight = 178;
+
+  /// Banyak baris isi singkat pada kartu catatan.
+  static const int notePreviewLines = 3;
 }

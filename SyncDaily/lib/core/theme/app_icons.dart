@@ -30,6 +30,13 @@ class AppIcons {
   static const IconData chevronRight = Icons.chevron_right;
   static const IconData dropdown = Icons.keyboard_arrow_down;
 
+  /// Ganti tampilan daftar/grid di layar Catatan.
+  static const IconData gridView = Icons.grid_view_outlined;
+  static const IconData listView = Icons.view_list_outlined;
+
+  /// Penanda catatan yang disematkan.
+  static const IconData pin = Icons.push_pin_outlined;
+
   /// Panah buka/tutup daftar subtugas di kartu agenda Kalender. Diputar 180
   /// derajat oleh widget saat daftarnya terbuka.
   static const IconData expand = Icons.expand_more;

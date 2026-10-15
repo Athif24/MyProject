@@ -27,4 +27,8 @@ class NoteRepositoryImpl implements NoteRepository {
   @override
   Future<void> softDeleteNote(String id) =>
       _dao.softDeleteNote(id, DateTime.now().toUtc());
+
+  @override
+  Future<void> restoreNotes(List<String> ids) =>
+      _dao.restoreNotes(ids, DateTime.now().toUtc());
 }

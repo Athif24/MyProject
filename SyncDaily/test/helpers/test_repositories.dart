@@ -2,6 +2,8 @@ import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/features/auth/domain/entities/user_profile.dart';
 import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
+import 'package:sync_daily/features/notes/domain/entities/note.dart';
+import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
 import 'package:sync_daily/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -12,6 +14,8 @@ import 'package:sync_daily/features/tasks/domain/repositories/task_repository.da
 class MockTaskRepository extends Mock implements TaskRepository {}
 
 class MockProjectRepository extends Mock implements ProjectRepository {}
+
+class MockNoteRepository extends Mock implements NoteRepository {}
 
 class MockNotificationRepository extends Mock implements NotificationRepository {}
 
@@ -59,10 +63,18 @@ void registerMockRepositories() {
   when(() => userProfileRepository.watchProfile())
       .thenAnswer((_) => Stream.value(const UserProfile(name: 'Pengguna')));
 
+  // Dipakai layar Catatan (tab keempat). Tanpa tiruan ini, tes tata letak akan
+  // membuka query stream Drift yang meninggalkan timer.
+  final noteRepository = MockNoteRepository();
+  when(() => noteRepository.watchNotes())
+      .thenAnswer((_) => Stream<List<Note>>.value(const []));
+  when(() => noteRepository.getNote(any())).thenAnswer((_) async => null);
+
   _override<TaskRepository>(taskRepository);
   _override<ProjectRepository>(projectRepository);
   _override<NotificationRepository>(notificationRepository);
   _override<UserProfileRepository>(userProfileRepository);
+  _override<NoteRepository>(noteRepository);
 }
 
 void _override<T extends Object>(T instance) {

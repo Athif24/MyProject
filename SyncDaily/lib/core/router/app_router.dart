@@ -6,6 +6,8 @@ import 'package:sync_daily/features/calendar/presentation/pages/calendar_page.da
 import 'package:sync_daily/features/chat/presentation/pages/chat_page.dart';
 import 'package:sync_daily/features/debug/presentation/pages/component_gallery_page.dart';
 import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
+import 'package:sync_daily/features/notes/presentation/pages/note_detail_page.dart';
+import 'package:sync_daily/features/notes/presentation/pages/note_form_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/notes_page.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
 import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
@@ -94,6 +96,28 @@ class AppRouter {
         name: 'task-edit',
         builder: (context, state) => TaskFormPage(
           taskId: state.pathParameters['id'],
+        ),
+      ),
+      // Catatan: rute di level atas (di luar shell) seperti tugas, agar layar
+      // form/detail tampil penuh tanpa navigasi bawah.
+      // Harus sebelum `/notes/:id` agar "new" tidak dibaca sebagai id.
+      GoRoute(
+        path: '/notes/new',
+        name: 'note-new',
+        builder: (context, state) => const NoteFormPage(),
+      ),
+      GoRoute(
+        path: '/notes/:id',
+        name: 'note-detail',
+        builder: (context, state) => NoteDetailPage(
+          noteId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        path: '/notes/:id/edit',
+        name: 'note-edit',
+        builder: (context, state) => NoteFormPage(
+          noteId: state.pathParameters['id'],
         ),
       ),
     ],

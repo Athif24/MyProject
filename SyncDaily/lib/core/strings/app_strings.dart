@@ -198,4 +198,45 @@ class AppStrings {
 
   /// Contoh: `Sampai 17.00` (hari terakhir acara lintas hari).
   static String endsAtTime(String clock) => 'Sampai $clock';
+
+  // Catatan.
+  static const String noteNew = 'Catatan Baru';
+  static const String noteEdit = 'Ubah Catatan';
+  static const String noteDetail = 'Detail Catatan';
+  static const String noteContentLabel = 'Isi';
+  static const String noteCategoryLabel = 'Kategori';
+  static const String noteCategoryAll = 'Semua';
+  static const String noteCategoryNone = 'Tanpa kategori';
+  static const String noteCategoryPersonal = 'Pribadi';
+  static const String noteCategoryWork = 'Pekerjaan';
+  static const String noteCategoryIdea = 'Ide';
+  static const String noteCategoryStudy = 'Kuliah';
+  static const String noteCategoryImportant = 'Penting';
+  static const String notePin = 'Sematkan';
+  static const String noteViewGrid = 'Tampilan grid';
+  static const String noteViewList = 'Tampilan daftar';
+  static const String noteSearchHint = 'Cari catatan';
+  static const String noteAdd = 'Tambah catatan';
+  static const String noteTitleRequired = 'Judul catatan wajib diisi';
+  static const String noNoteContent = 'Tanpa isi';
+  static const String noNotes = 'Belum ada catatan';
+  static const String noNotesDescription =
+      'Catatan yang Anda buat akan tampil di sini.';
+  static const String noNotesMatch = 'Tidak ada catatan yang cocok';
+  static const String noNotesMatchDescription =
+      'Coba kata kunci atau kategori lain.';
+  static const String deleteNoteTitle = 'Hapus catatan?';
+
+  /// Contoh: `"Beli buku" akan dihapus.`
+  static String deleteNoteBody(String title) => '"$title" akan dihapus.';
+  static const String noteDeleted = 'Catatan dihapus';
+  static const String noteNotFound = 'Catatan tidak ditemukan';
+  static const String noteNotFoundDescription =
+      'Catatan ini sudah dihapus atau tidak tersedia.';
+
+  /// Label tanggal kartu catatan untuk catatan yang diperbarui hari ini.
+  static const String noteUpdatedToday = 'Hari ini';
+
+  /// Label tanggal kartu catatan untuk catatan yang diperbarui kemarin.
+  static const String noteUpdatedYesterday = 'Kemarin';
 }

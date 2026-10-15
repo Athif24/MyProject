@@ -34,4 +34,18 @@ class NotesDao extends DatabaseAccessor<AppDatabase> with _$NotesDaoMixin {
       ),
     );
   }
+
+  /// Memulihkan catatan yang sebelumnya di-soft-delete (mengosongkan
+  /// `deletedAt`), dipakai aksi "Urungkan".
+  Future<void> restoreNotes(List<String> ids, DateTime now) async {
+    if (ids.isEmpty) {
+      return;
+    }
+    await (update(notes)..where((n) => n.id.isIn(ids))).write(
+      NotesCompanion(
+        deletedAt: const Value(null),
+        updatedAt: Value(now),
+      ),
+    );
+  }
 }

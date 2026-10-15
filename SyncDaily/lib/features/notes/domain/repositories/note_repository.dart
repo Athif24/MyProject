@@ -8,4 +8,7 @@ abstract class NoteRepository {
   Future<void> upsertNote(Note note);
 
   Future<void> softDeleteNote(String id);
+
+  /// Memulihkan catatan yang sebelumnya ter-soft-delete (aksi "Urungkan").
+  Future<void> restoreNotes(List<String> ids);
 }
