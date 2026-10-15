@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/di/injection.dart';
+import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
@@ -93,8 +94,30 @@ void main() {
     await db.close();
   });
 
+  testWidgets('form dibuka tanpa memfokuskan kolom judul', (tester) async {
+    AppRouter.router.go('/home');
+    await tester.pumpWidget(const SyncDailyApp());
+    await tester.pumpAndSettle();
+
+    // Tombol + di nav membuka form.
+    await tester.tap(find.byIcon(AppIcons.add));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.newItem), findsOneWidget);
+
+    // Tanpa autofocus: keyboard tidak muncul sampai kolom diketuk.
+    final title = tester.widget<TextField>(find.byType(TextField).first);
+    expect(title.autofocus, isFalse);
+    expect(title.focusNode?.hasFocus ?? false, isFalse);
+    expect(tester.testTextInput.isVisible, isFalse);
+
+    await tester.tap(find.byType(TextField).first);
+    await tester.pumpAndSettle();
+    expect(tester.testTextInput.isVisible, isTrue);
+  });
+
   testWidgets('form dibuka dari tombol +, diisi, lalu disimpan',
       (tester) async {
+    AppRouter.router.go('/home');
     await tester.pumpWidget(const SyncDailyApp());
     await tester.pumpAndSettle();
 

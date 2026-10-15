@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -194,6 +196,94 @@ void main() {
     await tester.tap(find.text(AppStrings.undo));
     await tester.pumpAndSettle();
 
+    final restored = verify(() => taskRepository.restoreTasks(captureAny()))
+        .captured
+        .single as List<String>;
+    expect(restored, ['t1']);
+  });
+
+  // Butir 1: setelah Hapus dikonfirmasi, layar detail tidak boleh sempat
+  // menampilkan "Item tidak ditemukan" walau baris sudah hilang dari aliran
+  // data sementara penghapusan masih berjalan.
+  testWidgets('tidak ada "Item tidak ditemukan" selama proses hapus',
+      (tester) async {
+    final tasks = StreamController<List<Task>>.broadcast();
+    final pendingDelete = Completer<List<String>>();
+    addTearDown(tasks.close);
+
+    final task = Task(
+      id: 't1',
+      title: 'Tugas hari ini',
+      type: TaskType.task,
+      dueAt: DateTime.now(),
+      createdAt: DateTime.now().toUtc(),
+      updatedAt: DateTime.now().toUtc(),
+    );
+
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => tasks.stream);
+    when(() => taskRepository.softDeleteTask(any()))
+        .thenAnswer((_) => pendingDelete.future);
+
+    AppRouter.router.go('/home');
+
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(const SyncDailyApp());
+    await tester.pumpAndSettle();
+
+    // Daftar baru berlangganan aliran data setelah halaman dibuka, jadi data
+    // dipancarkan sesudahnya (controller broadcast tidak menyimpan nilai
+    // terakhir).
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is StatCard && widget.label == AppStrings.statToday,
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    tasks.add([task]);
+    await tester.pumpAndSettle();
+    expect(find.text('Tugas hari ini'), findsOneWidget);
+
+    // Layar detail juga berlangganan aliran data; pancarkan ulang.
+    await tester.tap(find.text('Tugas hari ini'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+
+    tasks.add([task]);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.detailTask), findsOneWidget);
+
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.delete));
+    await tester.pumpAndSettle();
+
+    // Hapus masih berjalan (future belum selesai); baris hilang dari aliran
+    // data lebih dulu.
+    tasks.add(const []);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.taskNotFound), findsNothing);
+    expect(find.text(AppStrings.detailTask), findsOneWidget);
+
+    // Hapus selesai: halaman langsung kembali ke daftar + snackbar Urungkan.
+    pendingDelete.complete(['t1']);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.detailTask), findsNothing);
+    expect(find.text(AppStrings.taskDeleted), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.undo));
+    await tester.pumpAndSettle();
+
+    // Snackbar membawa id yang terhapus.
     final restored = verify(() => taskRepository.restoreTasks(captureAny()))
         .captured
         .single as List<String>;

@@ -40,6 +40,11 @@ class CalendarPage extends StatelessWidget {
 /// Jarak bawah agar item terakhir tidak tertutup bottom nav.
 const double _bottomInset = AppSizes.navHeight + AppSizes.sectionGap * 2;
 
+/// Sisa ruang minimal untuk daftar agenda yang bergulir sendiri. Bila ruang di
+/// layar lebih kecil dari ini (layar pendek), seluruh halaman bergulir seperti
+/// sebelumnya supaya tidak ada isi yang terpotong.
+const double _minAgendaHeight = 160;
+
 class _CalendarView extends StatelessWidget {
   const _CalendarView();
 
@@ -94,7 +99,13 @@ class _CalendarView extends StatelessWidget {
   }
 }
 
-class _LoadedView extends StatelessWidget {
+/// Isi Kalender yang sudah termuat.
+///
+/// Grid bulan (termasuk nama bulan dan tombolnya), judul seksi, dan tombol
+/// tambah tetap di atas; hanya daftar agenda yang bergulir. Bila sisa ruang
+/// untuk daftar agenda terlalu kecil (< [_minAgendaHeight]), seluruh halaman
+/// bergulir seperti sebelumnya supaya layar pendek tidak terpotong.
+class _LoadedView extends StatefulWidget {
   final CalendarState state;
   final ValueChanged<DateTime> onSelectDate;
   final VoidCallback onPreviousMonth;
@@ -114,7 +125,124 @@ class _LoadedView extends StatelessWidget {
   });
 
   @override
+  State<_LoadedView> createState() => _LoadedViewState();
+}
+
+class _LoadedViewState extends State<_LoadedView> {
+  /// Kunci bagian tetap untuk mengukur tingginya.
+  final GlobalKey _fixedKey = GlobalKey();
+
+  /// Tinggi bagian tetap hasil pengukuran, null sebelum frame pertama selesai.
+  double? _fixedHeight;
+
+  @override
   Widget build(BuildContext context) {
+    _measureFixed();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final height = _fixedHeight;
+        final agendaSpace = height == null
+            ? 0.0
+            : constraints.maxHeight - height - AppSizes.cardGap;
+        if (agendaSpace < _minAgendaHeight) {
+          return _scrollingLayout();
+        }
+        return _fixedLayout();
+      },
+    );
+  }
+
+  /// Mengukur tinggi bagian tetap setelah frame selesai. Tinggi berubah hanya
+  /// saat ukuran huruf atau lebar layar berubah, jadi tidak ada pengukuran
+  /// berulang.
+  void _measureFixed() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      final size = _fixedKey.currentContext?.size;
+      if (size == null) {
+        return;
+      }
+      final measured = size.height;
+      final previous = _fixedHeight;
+      if (previous != null && (previous - measured).abs() < 0.5) {
+        return;
+      }
+      setState(() => _fixedHeight = measured);
+    });
+  }
+
+  /// Bagian tetap: judul layar, grid bulan, dan judul seksi beserta tombol
+  /// tambah.
+  Widget _fixedPart() {
+    return KeyedSubtree(
+      key: _fixedKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            AppStrings.screenCalendar,
+            style: AppTypography.textTheme.displayMedium,
+          ),
+          const SizedBox(height: AppSizes.sectionGap),
+          CalendarMonthGrid(
+            month: widget.state.visibleMonth,
+            selectedDate: widget.state.selectedDate,
+            daysWithItems: widget.state.daysWithItems,
+            onSelectDate: widget.onSelectDate,
+            onPreviousMonth: widget.onPreviousMonth,
+            onNextMonth: widget.onNextMonth,
+          ),
+          const SizedBox(height: AppSizes.sectionGap),
+          SectionHeader(
+            title: _sectionTitle(widget.state),
+            trailing: CalendarAddButton(onTap: widget.onAdd),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _agenda() {
+    return _Agenda(
+      state: widget.state,
+      onOpenDetail: widget.onOpenDetail,
+      onToggleSubtasks: widget.onToggleSubtasks,
+    );
+  }
+
+  /// Bagian tetap di atas, daftar agenda bergulir sendiri di bawahnya.
+  Widget _fixedLayout() {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.pagePadding,
+            AppSizes.cardGap,
+            AppSizes.pagePadding,
+            0,
+          ),
+          child: _fixedPart(),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.pagePadding,
+              AppSizes.cardGap,
+              AppSizes.pagePadding,
+              _bottomInset,
+            ),
+            child: _agenda(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Layar pendek: seluruh halaman bergulir (perilaku lama).
+  Widget _scrollingLayout() {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppSizes.pagePadding,
@@ -125,30 +253,9 @@ class _LoadedView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            AppStrings.screenCalendar,
-            style: AppTypography.textTheme.displayMedium,
-          ),
-          const SizedBox(height: AppSizes.sectionGap),
-          CalendarMonthGrid(
-            month: state.visibleMonth,
-            selectedDate: state.selectedDate,
-            daysWithItems: state.daysWithItems,
-            onSelectDate: onSelectDate,
-            onPreviousMonth: onPreviousMonth,
-            onNextMonth: onNextMonth,
-          ),
-          const SizedBox(height: AppSizes.sectionGap),
-          SectionHeader(
-            title: _sectionTitle(state),
-            trailing: CalendarAddButton(onTap: onAdd),
-          ),
+          _fixedPart(),
           const SizedBox(height: AppSizes.cardGap),
-          _Agenda(
-            state: state,
-            onOpenDetail: onOpenDetail,
-            onToggleSubtasks: onToggleSubtasks,
-          ),
+          _agenda(),
         ],
       ),
     );

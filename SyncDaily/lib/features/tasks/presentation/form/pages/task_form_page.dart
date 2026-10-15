@@ -198,7 +198,6 @@ class _FormBodyState extends State<_FormBody> {
             controller: _title,
             label: AppStrings.title,
             onChanged: _cubit.setTitle,
-            autofocus: !state.isEditing,
           ),
           const SizedBox(height: AppSizes.cardGap),
           _TextField(
@@ -341,14 +340,12 @@ class _TextField extends StatelessWidget {
   final String label;
   final ValueChanged<String> onChanged;
   final int maxLines;
-  final bool autofocus;
 
   const _TextField({
     required this.controller,
     required this.label,
     required this.onChanged,
     this.maxLines = 1,
-    this.autofocus = false,
   });
 
   @override
@@ -363,7 +360,6 @@ class _TextField extends StatelessWidget {
         controller: controller,
         onChanged: onChanged,
         maxLines: maxLines,
-        autofocus: autofocus,
         style: AppTypography.textTheme.bodyLarge,
         decoration: InputDecoration(
           labelText: label,

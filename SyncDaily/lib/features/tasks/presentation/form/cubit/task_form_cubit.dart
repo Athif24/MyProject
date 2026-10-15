@@ -12,6 +12,10 @@ import 'package:sync_daily/features/tasks/domain/repositories/task_repository.da
 import 'package:sync_daily/features/tasks/presentation/form/cubit/task_form_state.dart';
 import 'package:uuid/uuid.dart';
 
+/// Jam bawaan item berjam yang dibuka dari tanggal Kalender: Acara dan
+/// Pengingat mulai 09.00 (acara selesai satu jam setelahnya).
+const int _initialStartHour = 9;
+
 /// Menyimpan sub-task yang sedang disusun di form. [id] null berarti sub-task
 /// baru; id terisi berarti sub-task yang sudah ada (mode ubah).
 class SubtaskDraft {
@@ -46,6 +50,11 @@ class TaskFormCubit extends Cubit<TaskFormState> {
   /// merekonsiliasi saat menyimpan.
   List<SubtaskDraft> _subtasks = const [];
 
+  /// Tanggal awal dari Kalender (`?date=`), tanpa jam. Dipakai lagi saat
+  /// pengguna mengganti tipe supaya bawaan mengikuti aturan tipe baru. Null
+  /// pada form tanpa tanggal awal dan pada mode ubah.
+  DateTime? _initialDate;
+
   /// Dipakai [TaskFormPage] untuk memuat sub-task yang sudah ada.
   List<SubtaskDraft> get subtasks => List.unmodifiable(_subtasks);
 
@@ -72,22 +81,61 @@ class TaskFormCubit extends Cubit<TaskFormState> {
   }
 
   /// Mengisi kolom tanggal sesuai tipe (Acara/Pengingat -> Mulai, Tugas/
-  /// Milestone -> Tenggat) dengan tanggal awal dari Kalender. Hanya tanggal
-  /// awalnya yang diisi; aturan validasi dan simpan tidak berubah.
+  /// Milestone -> Tenggat) dengan tanggal awal dari Kalender, memakai aturan
+  /// bawaan [TaskType] (lihat [_applyDateDefaults]). Aturan validasi dan simpan
+  /// tidak berubah.
   void _applyInitialDate(DateTime initialDate) {
     final date = DateTime(
       initialDate.year,
       initialDate.month,
       initialDate.day,
     );
-    switch (state.type) {
-      case TaskType.event:
-      case TaskType.reminder:
-        emit(state.copyWith(startAt: date));
+    _initialDate = date;
+    _applyDateDefaults(state.type, date);
+  }
+
+  /// Bawaan tanggal untuk [type] pada [date]:
+  /// - Tugas dan Milestone: seharian (tersimpan sebagai tanggal kalender UTC
+  ///   lewat `TaskDateUtils`);
+  /// - Acara: berjam, 09.00 sampai 10.00;
+  /// - Pengingat: berjam, 09.00.
+  void _applyDateDefaults(TaskType type, DateTime date) {
+    switch (type) {
       case TaskType.task:
       case TaskType.milestone:
-        emit(state.copyWith(dueAt: date));
+        emit(state.copyWith(
+          isAllDay: true,
+          dueAt: date,
+          clearStartAt: true,
+          clearEndAt: true,
+        ));
+      case TaskType.event:
+        emit(state.copyWith(
+          isAllDay: false,
+          startAt: _timeOn(date, _initialStartHour),
+          endAt: _timeOn(date, _initialStartHour + 1),
+          clearDueAt: true,
+        ));
+      case TaskType.reminder:
+        emit(state.copyWith(
+          isAllDay: false,
+          startAt: _timeOn(date, _initialStartHour),
+          clearEndAt: true,
+          clearDueAt: true,
+        ));
     }
+  }
+
+  static DateTime _timeOn(DateTime date, int hour) =>
+      DateTime(date.year, date.month, date.day, hour);
+
+  /// Tanggal acuan yang sedang terisi (tanpa jam), atau null bila belum ada.
+  DateTime? _anchorDay() {
+    final anchor = state.anchorDate;
+    if (anchor == null) {
+      return null;
+    }
+    return DateTime(anchor.year, anchor.month, anchor.day);
   }
 
   Future<void> _loadTask(String taskId) async {
@@ -193,7 +241,15 @@ class TaskFormCubit extends Cubit<TaskFormState> {
     }
   }
 
-  void setType(TaskType type) => _applyTypeDefaults(type, isEditing: state.isEditing);
+  void setType(TaskType type) {
+    // Pada form yang dibuka dari tanggal Kalender, bawaan tanggal mengikuti
+    // aturan tipe baru (mis. Acara 09.00-10.00, bukan sisa 00.00).
+    final base = _initialDate == null ? null : (_anchorDay() ?? _initialDate!);
+    _applyTypeDefaults(type, isEditing: state.isEditing);
+    if (base != null) {
+      _applyDateDefaults(type, base);
+    }
+  }
 
   void setTitle(String value) => emit(state.copyWith(title: value));
 

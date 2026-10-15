@@ -5,7 +5,18 @@ import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_recurrence.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_reminder.dart';
 
-enum TaskDetailStatus { loading, loaded, notFound, error }
+enum TaskDetailStatus {
+  loading,
+  loaded,
+
+  /// Sedang menghapus item. Layar menampilkan keadaan netral (tanpa pesan
+  /// galat) sampai halaman ditutup, supaya baris yang hilang dari aliran data
+  /// tidak sempat memunculkan "Item tidak ditemukan".
+  deleting,
+
+  notFound,
+  error,
+}
 
 /// Keadaan layar detail tugas (F4b).
 class TaskDetailState extends Equatable {

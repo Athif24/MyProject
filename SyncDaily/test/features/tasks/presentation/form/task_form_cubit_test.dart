@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
+import 'package:sync_daily/features/calendar/domain/calendar_agenda.dart';
 import 'package:sync_daily/features/projects/data/repositories/project_repository_impl.dart';
 import 'package:sync_daily/features/projects/domain/entities/project.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
@@ -422,12 +423,13 @@ void main() {
       return cubit;
     }
 
-    test('tugas: tenggat terisi tanggal awal tanpa jam', () async {
+    test('tugas: tenggat terisi tanggal awal dan sepanjang hari', () async {
       final cubit = await startWithDate(
         initialDate: DateTime(2026, 10, 14, 13, 45),
       );
 
       expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.isAllDay, isTrue);
       expect(cubit.state.startAt, isNull);
 
       await cubit.close();
@@ -445,25 +447,29 @@ void main() {
       await cubit.close();
     });
 
-    test('acara: waktu mulai terisi, waktu selesai dibiarkan kosong', () async {
+    test('acara: mulai 09.00 dan selesai 10.00', () async {
       final cubit = await startWithDate(
         type: TaskType.event,
         initialDate: DateTime(2026, 10, 14),
       );
 
-      expect(cubit.state.startAt, DateTime(2026, 10, 14));
-      expect(cubit.state.endAt, isNull);
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, DateTime(2026, 10, 14, 10));
+      expect(cubit.state.isAllDay, isFalse);
+      expect(cubit.state.dueAt, isNull);
 
       await cubit.close();
     });
 
-    test('pengingat: waktu mulai terisi', () async {
+    test('pengingat: mulai 09.00 tanpa waktu selesai', () async {
       final cubit = await startWithDate(
         type: TaskType.reminder,
         initialDate: DateTime(2026, 10, 14),
       );
 
-      expect(cubit.state.startAt, DateTime(2026, 10, 14));
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, isNull);
+      expect(cubit.state.isAllDay, isFalse);
 
       await cubit.close();
     });
@@ -473,7 +479,138 @@ void main() {
 
       expect(cubit.state.dueAt, isNull);
       expect(cubit.state.startAt, isNull);
+      expect(cubit.state.isAllDay, isFalse);
 
+      await cubit.close();
+    });
+
+    test('tanpa tanggal awal, ganti tipe tidak mengisi kolom tanggal',
+        () async {
+      final cubit = await startWithDate();
+
+      cubit.setType(TaskType.event);
+      expect(cubit.state.startAt, isNull);
+      expect(cubit.state.endAt, isNull);
+
+      cubit.setType(TaskType.milestone);
+      expect(cubit.state.dueAt, isNull);
+
+      await cubit.close();
+    });
+
+    test('ganti tipe memperbarui bawaan tanggal (tidak menyisakan 00.00)',
+        () async {
+      final cubit = await startWithDate(
+        initialDate: DateTime(2026, 10, 14),
+      );
+      expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.isAllDay, isTrue);
+
+      cubit.setType(TaskType.event);
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, DateTime(2026, 10, 14, 10));
+
+      cubit.setType(TaskType.reminder);
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, isNull);
+
+      cubit.setType(TaskType.milestone);
+      expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.isAllDay, isTrue);
+      expect(cubit.state.startAt, isNull);
+
+      cubit.setType(TaskType.task);
+      expect(cubit.state.dueAt, DateTime(2026, 10, 14));
+      expect(cubit.state.isAllDay, isTrue);
+
+      await cubit.close();
+    });
+
+    test('ganti tipe dari ?date= tersimpan berjam sesuai tipe baru', () async {
+      final cubit = await startWithDate(
+        initialDate: DateTime(2026, 10, 14),
+      );
+      cubit.setTitle('Rapat');
+      cubit.setType(TaskType.event);
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.type, TaskType.event);
+      expect(task.isAllDay, isFalse);
+      expect(task.startAt!.isAtSameMomentAs(DateTime(2026, 10, 14, 9)), isTrue);
+      expect(task.endAt!.isAtSameMomentAs(DateTime(2026, 10, 14, 10)), isTrue);
+      await cubit.close();
+    });
+
+    test('tugas dari ?date= tersimpan seharian sebagai tanggal kalender UTC',
+        () async {
+      // Simulasi perangkat WIB: pengguna menekan tombol tambah Kalender.
+      final cubit = await startWithDate(
+        initialDate: DateTime(2026, 10, 14, 13, 45),
+      );
+      cubit.setTitle('Beli buku');
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.isAllDay, isTrue);
+      expect(task.dueAt!.toUtc(), DateTime.utc(2026, 10, 14));
+      expect(TaskDateUtils.isOnDay(task, DateTime(2026, 10, 14)), isTrue);
+      await cubit.close();
+    });
+
+    test('tugas dari ?date= tampil sepanjang hari di agenda', () async {
+      final cubit = await startWithDate(
+        initialDate: DateTime(2026, 10, 14, 13, 45),
+      );
+      cubit.setTitle('Beli buku');
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      final entries = CalendarAgenda.entriesOnDay(
+        tasks: [task],
+        recurrences: const [],
+        day: DateTime(2026, 10, 14),
+      );
+
+      expect(entries, hasLength(1));
+      expect(entries.single.timeKind, CalendarTimeKind.allDay);
+      expect(entries.single.time, isNull);
+      await cubit.close();
+    });
+
+    test('acara dari ?date= tersimpan berjam 09.00 sampai 10.00', () async {
+      final cubit = await startWithDate(
+        type: TaskType.event,
+        initialDate: DateTime(2026, 10, 14),
+      );
+      cubit.setTitle('Rapat');
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.isAllDay, isFalse);
+      expect(task.startAt!.isAtSameMomentAs(DateTime(2026, 10, 14, 9)), isTrue);
+      expect(task.endAt!.isAtSameMomentAs(DateTime(2026, 10, 14, 10)), isTrue);
+      expect(task.dueAt, isNull);
+      await cubit.close();
+    });
+
+    test('pengingat dari ?date= tersimpan berjam 09.00', () async {
+      final cubit = await startWithDate(
+        type: TaskType.reminder,
+        initialDate: DateTime(2026, 10, 14),
+      );
+      cubit.setTitle('Minum obat');
+
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.startAt!.isAtSameMomentAs(DateTime(2026, 10, 14, 9)), isTrue);
+      expect(task.endAt, isNull);
+      expect(task.isAllDay, isFalse);
       await cubit.close();
     });
 
@@ -493,6 +630,13 @@ void main() {
       );
 
       expect(cubit.state.dueAt, DateTime(2026, 10, 20, 9));
+      expect(cubit.state.isAllDay, isFalse);
+
+      // Ganti tipe pada mode ubah juga tidak memakai tanggal awal Kalender.
+      cubit.setType(TaskType.event);
+      expect(cubit.state.startAt, isNull);
+      expect(cubit.state.endAt, isNull);
+      expect(cubit.state.dueAt, isNull);
 
       await cubit.close();
     });

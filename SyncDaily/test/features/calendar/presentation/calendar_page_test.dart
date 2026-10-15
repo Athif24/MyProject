@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -9,7 +11,9 @@ import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/category_theme.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
+import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/list_item_tile.dart';
+import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_add_button.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_item_tile.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_month_grid.dart';
@@ -300,6 +304,9 @@ void main() {
 
     expect(find.text(AppStrings.newItem), findsOneWidget);
     expect(find.textContaining(IdDate.full(day2)), findsOneWidget);
+    // Tanpa autofocus: keyboard tidak langsung terbuka dari pintu masuk
+    // Kalender.
+    expect(tester.testTextInput.isVisible, isFalse);
 
     AppRouter.router.pop();
     await tester.pumpAndSettle();
@@ -573,6 +580,124 @@ void main() {
     );
   });
 
+  /// [count] item berjam pada hari ke-1, untuk menguji agenda panjang yang
+  /// bergulir.
+  List<Task> manyTasks(int count) => [
+        for (var i = 1; i <= count; i++)
+          Task(
+            id: 'm$i',
+            title: 'Agenda $i',
+            type: TaskType.task,
+            dueAt: DateTime(day1.year, day1.month, day1.day, 6 + i),
+            createdAt: ts,
+            updatedAt: ts,
+          ),
+      ];
+
+  testWidgets('grid bulan, judul seksi, dan tombol tambah tetap saat agenda '
+      'digulir', (tester) async {
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream.value(manyTasks(15)));
+
+    await pumpCalendar(tester);
+    await tester.tap(dayCell(day1));
+    await tester.pumpAndSettle();
+    expect(find.text('Agenda 1'), findsOneWidget);
+
+    final gridTop = tester.getTopLeft(find.byType(CalendarMonthGrid)).dy;
+    final titleTop = tester.getTopLeft(find.text(AppStrings.screenCalendar)).dy;
+    final sectionTop = tester.getTopLeft(find.byType(SectionHeader)).dy;
+    final addBottom =
+        tester.getBottomLeft(find.byType(CalendarAddButton)).dy;
+    final firstCardTop = tester.getTopLeft(cardOf('Agenda 1')).dy;
+
+    await tester.drag(find.byType(Scrollable), const Offset(0, -300));
+    await tester.pumpAndSettle();
+
+    // Daftar agenda ikut bergulir...
+    expect(
+      tester.getTopLeft(cardOf('Agenda 1')).dy,
+      lessThan(firstCardTop - 200),
+    );
+    // ...tetapi grid bulan (beserta nama bulan), judul seksi, dan tombol
+    // tambah tetap di tempatnya.
+    expect(tester.getTopLeft(find.byType(CalendarMonthGrid)).dy, gridTop);
+    expect(find.text(IdDate.monthYear(today)), findsOneWidget);
+    expect(tester.getTopLeft(find.text(AppStrings.screenCalendar)).dy, titleTop);
+    expect(tester.getTopLeft(find.byType(SectionHeader)).dy, sectionTop);
+    expect(tester.getBottomLeft(find.byType(CalendarAddButton)).dy, addBottom);
+  });
+
+  testWidgets('kartu agenda terakhir tidak tertutup bilah navigasi bawah',
+      (tester) async {
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream.value(manyTasks(15)));
+
+    await pumpCalendar(tester);
+    await tester.tap(dayCell(day1));
+    await tester.pumpAndSettle();
+
+    // Gulir sampai dasar daftar agenda.
+    await tester.drag(find.byType(Scrollable), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+
+    final navTop = tester.getTopLeft(find.byType(AppBottomNav)).dy;
+    expect(
+      tester.getBottomLeft(cardOf('Agenda 15')).dy,
+      lessThanOrEqualTo(navTop),
+    );
+  });
+
+  testWidgets('layar pendek (320 x 640 dp): agenda panjang tidak meluap',
+      (tester) async {
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream.value(manyTasks(15)));
+
+    await pumpCalendar(tester, physicalSize: const Size(960, 1920));
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(dayCell(day1));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+
+    // Kartu terakhir tetap bisa dicapai dengan menggulir.
+    await tester.drag(find.byType(Scrollable), const Offset(0, -3000));
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Agenda 15'), findsOneWidget);
+  });
+
+  testWidgets('tugas seharian dari Kalender tampil "Sepanjang hari" di agenda',
+      (tester) async {
+    // Tugas seharian dari `?date=` tersimpan sebagai tanggal kalender UTC
+    // (lihat `TaskDateUtils`).
+    final allDay = Task(
+      id: 'x',
+      title: 'Tugas Seharian',
+      type: TaskType.task,
+      isAllDay: true,
+      dueAt: DateTime.utc(day1.year, day1.month, day1.day),
+      createdAt: ts,
+      updatedAt: ts,
+    );
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream.value([allDay]));
+
+    await pumpCalendar(tester);
+    await tester.tap(dayCell(day1));
+    await tester.pumpAndSettle();
+
+    final tile = tester.widget<ListItemTile>(
+      find.ancestor(
+        of: find.text('Tugas Seharian'),
+        matching: find.byType(ListItemTile),
+      ),
+    );
+    expect(tile.time, AppStrings.allDay);
+    expect(find.text(AppStrings.allDay), findsOneWidget);
+  });
+
   /// Kalender -> detail -> hapus (konfirmasi) sehingga snackbar "Urungkan"
   /// tampil di Kalender.
   Future<void> pumpToDeletedCalendar(WidgetTester tester) async {
@@ -624,5 +749,63 @@ void main() {
     expect(find.text(AppStrings.taskDeleted), findsNothing);
     expect(find.text(AppStrings.undo), findsNothing);
     verifyNever(() => taskRepository.restoreTasks(any()));
+  });
+
+  // Butir 1: pintu masuk Kalender juga tidak boleh sempat menampilkan
+  // "Item tidak ditemukan" selama penghapusan berjalan.
+  testWidgets('hapus dari Kalender tidak sempat menampilkan "Item tidak '
+      'ditemukan"', (tester) async {
+    final stream = StreamController<List<Task>>.broadcast();
+    final pendingDelete = Completer<List<String>>();
+    addTearDown(stream.close);
+
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => stream.stream);
+    when(() => taskRepository.softDeleteTask('c'))
+        .thenAnswer((_) => pendingDelete.future);
+
+    await pumpCalendar(tester);
+    stream.add(tasks);
+    await tester.pumpAndSettle();
+
+    await tester.tap(dayCell(day1));
+    await tester.pumpAndSettle();
+
+    // Layar detail berlangganan aliran data sendiri; pancarkan ulang.
+    await tester.tap(find.text('Selesai Satu'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    stream.add(tasks);
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.detailTask), findsOneWidget);
+
+    // Konfirmasi hapus.
+    await tester.tap(find.byIcon(AppIcons.delete));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(AppStrings.delete));
+    await tester.pumpAndSettle();
+
+    // Baris hilang dari aliran data sebelum penghapusan selesai.
+    stream.add(const []);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.taskNotFound), findsNothing);
+    expect(find.text(AppStrings.detailTask), findsOneWidget);
+
+    // Penghapusan selesai: kembali ke Kalender dengan snackbar Urungkan.
+    pendingDelete.complete(['c', 'd', 'e']);
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.screenCalendar), findsOneWidget);
+    expect(find.text(AppStrings.detailTask), findsNothing);
+    expect(find.text(AppStrings.taskDeleted), findsOneWidget);
+
+    await tester.tap(find.text(AppStrings.undo));
+    await tester.pumpAndSettle();
+
+    final restored = verify(() => taskRepository.restoreTasks(captureAny()))
+        .captured
+        .single as List<String>;
+    expect(restored, ['c', 'd', 'e']);
   });
 }

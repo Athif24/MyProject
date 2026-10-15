@@ -77,11 +77,23 @@ class _TaskDetailView extends StatelessWidget {
     if (confirmed != true || !context.mounted) {
       return;
     }
-    final deletedIds = await cubit.delete();
-    if (!context.mounted) {
+    final deletedIds = await _delete(cubit);
+    if (deletedIds == null || !context.mounted) {
       return;
     }
+    // Kembali segera setelah penghapusan selesai; tidak menunggu emisi aliran
+    // data.
     context.pop(deletedIds);
+  }
+
+  /// Menghapus lewat cubit. Mengembalikan id yang terhapus, atau null bila
+  /// penghapusan gagal (keadaan galat sudah ditampilkan cubit).
+  Future<List<String>?> _delete(TaskDetailCubit cubit) async {
+    try {
+      return await cubit.delete();
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -186,6 +198,13 @@ class _Body extends StatelessWidget {
           title: AppStrings.loadFailedTitle,
           description: AppStrings.loadFailedDescription,
         );
+      case TaskDetailStatus.deleting:
+        // Keadaan netral: isi yang sudah ada tetap tampil tanpa pesan galat
+        // sampai halaman ditutup.
+        final task = state.task;
+        return task == null
+            ? const SizedBox.shrink()
+            : _LoadedBody(state: state, task: task);
       case TaskDetailStatus.notFound:
         return const _CenteredEmpty(
           title: AppStrings.taskNotFound,

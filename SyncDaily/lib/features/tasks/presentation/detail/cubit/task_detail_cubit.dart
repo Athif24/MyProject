@@ -42,6 +42,11 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
   }
 
   void _onTasks(List<Task> tasks) {
+    // Selama proses hapus, abaikan emisi aliran data: baris yang baru hilang
+    // tidak boleh mengubah keadaan sebelum halaman ditutup.
+    if (state.status == TaskDetailStatus.deleting) {
+      return;
+    }
     Task? task;
     for (final item in tasks) {
       if (item.id == taskId) {
@@ -70,6 +75,10 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
   Future<void> refresh() => _loadExtras();
 
   Future<void> _loadExtras() async {
+    // Tidak ada gunanya memuat ulang saat halaman sedang ditutup.
+    if (state.status == TaskDetailStatus.deleting) {
+      return;
+    }
     try {
       final reminders = await _taskRepository.getReminders(taskId);
       final recurrence = await _taskRepository.getRecurrence(taskId);
@@ -115,7 +124,20 @@ class TaskDetailCubit extends Cubit<TaskDetailState> {
 
   /// Menghapus item beserta sub-tasknya. Mengembalikan id yang terhapus untuk
   /// aksi "Urungkan".
-  Future<List<String>> delete() => _taskRepository.softDeleteTask(taskId);
+  ///
+  /// Status pindah ke [TaskDetailStatus.deleting] lebih dulu supaya layar
+  /// menampilkan keadaan netral: tanpa itu, baris yang hilang dari
+  /// `watchAllTasks()` sempat memunculkan "Item tidak ditemukan" sebelum
+  /// halaman kembali ke layar sebelumnya.
+  Future<List<String>> delete() async {
+    emit(state.copyWith(status: TaskDetailStatus.deleting, clearError: true));
+    try {
+      return await _taskRepository.softDeleteTask(taskId);
+    } catch (error, stackTrace) {
+      _onError(error, stackTrace);
+      rethrow;
+    }
+  }
 
   void _onError(Object error, StackTrace stackTrace) {
     emit(state.copyWith(

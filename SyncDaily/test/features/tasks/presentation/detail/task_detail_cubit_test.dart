@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/features/projects/data/repositories/project_repository_impl.dart';
+import 'package:sync_daily/features/projects/domain/entities/project.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 import 'package:sync_daily/features/tasks/data/repositories/task_repository_impl.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -11,6 +15,8 @@ import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
 import 'package:sync_daily/features/tasks/presentation/detail/cubit/task_detail_cubit.dart';
 import 'package:sync_daily/features/tasks/presentation/detail/cubit/task_detail_state.dart';
 import 'package:sync_daily/features/tasks/presentation/list/cubit/task_list_cubit.dart';
+
+import '../../../../helpers/test_repositories.dart';
 
 void main() {
   late AppDatabase db;
@@ -142,5 +148,88 @@ void main() {
 
     await detail.close();
     await taskList.close();
+  });
+
+  // Butir 1: baris yang hilang dari `watchAllTasks()` saat hapus berjalan tidak
+  // boleh mengubah status menjadi "tidak ditemukan" (kilatan sebelum kembali).
+  test('status tetap "sedang menghapus" walau aliran data memancarkan daftar tanpa item',
+      () async {
+    final taskRepository = MockTaskRepository();
+    final projectRepository = MockProjectRepository();
+    final tasks = StreamController<List<Task>>();
+    final pendingDelete = Completer<List<String>>();
+    addTearDown(tasks.close);
+
+    final task = Task(
+      id: 'p1',
+      title: 'Induk',
+      type: TaskType.task,
+      dueAt: today.add(const Duration(hours: 9)),
+      createdAt: fixedNow.toUtc(),
+      updatedAt: fixedNow.toUtc(),
+    );
+
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => tasks.stream);
+    when(() => projectRepository.watchProjects())
+        .thenAnswer((_) => Stream<List<Project>>.value(const []));
+    when(() => taskRepository.getReminders('p1'))
+        .thenAnswer((_) async => []);
+    when(() => taskRepository.getRecurrence('p1'))
+        .thenAnswer((_) async => null);
+    when(() => taskRepository.softDeleteTask('p1'))
+        .thenAnswer((_) => pendingDelete.future);
+
+    final cubit = TaskDetailCubit(
+      taskId: 'p1',
+      taskRepository: taskRepository,
+      projectRepository: projectRepository,
+    )..start();
+
+    tasks.add([task]);
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    expect(cubit.state.status, TaskDetailStatus.loaded);
+
+    final deleted = cubit.delete();
+    expect(cubit.state.status, TaskDetailStatus.deleting);
+
+    // Baris induk hilang dari aliran data sebelum halaman ditutup.
+    tasks.add(const []);
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(cubit.state.status, TaskDetailStatus.deleting);
+    expect(cubit.state.task?.id, 'p1');
+
+    pendingDelete.complete(['p1']);
+    expect(await deleted, ['p1']);
+    await cubit.close();
+  });
+
+  test('hapus gagal: status menjadi galat dan halaman tidak ditutup',
+      () async {
+    final taskRepository = MockTaskRepository();
+    final projectRepository = MockProjectRepository();
+
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream<List<Task>>.value(const []));
+    when(() => projectRepository.watchProjects())
+        .thenAnswer((_) => Stream<List<Project>>.value(const []));
+    when(() => taskRepository.getReminders('p1'))
+        .thenAnswer((_) async => []);
+    when(() => taskRepository.getRecurrence('p1'))
+        .thenAnswer((_) async => null);
+    when(() => taskRepository.softDeleteTask('p1'))
+        .thenAnswer((_) => Future<List<String>>.error(StateError('gagal')));
+
+    final cubit = TaskDetailCubit(
+      taskId: 'p1',
+      taskRepository: taskRepository,
+      projectRepository: projectRepository,
+    )..start();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    await expectLater(cubit.delete(), throwsA(isA<StateError>()));
+    expect(cubit.state.status, TaskDetailStatus.error);
+    await cubit.close();
   });
 }
