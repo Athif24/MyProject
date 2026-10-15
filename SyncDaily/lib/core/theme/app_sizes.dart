@@ -5,6 +5,9 @@ class AppSizes {
   static const double itemSpacing = 8;
   static const double sectionGap = 24;
   static const double cardGap = 12;
+
+  /// Padding dalam kartu item (mis. [ListItemTile]).
+  static const double cardPadding = 12;
   static const double navHeight = 68;
   static const double navIconBox = 46;
   static const double navItemPadding = 8;
@@ -26,4 +29,8 @@ class AppSizes {
   static const double calendarDayCircle = 32;
   static const double calendarDot = 5;
   static const double calendarDotGap = 3;
+  static const double calendarSubtaskGap = 4;
+
+  /// Ikon panah buka/tutup daftar subtugas di kartu agenda.
+  static const double calendarArrowIcon = 22;
 }

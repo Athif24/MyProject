@@ -4,10 +4,12 @@ import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/theme/app_colors.dart';
+import 'package:sync_daily/core/theme/app_theme.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_avatar.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
+import 'package:sync_daily/core/widgets/empty_state.dart';
 import 'package:sync_daily/core/widgets/list_item_tile.dart';
 import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/core/widgets/unread_badge.dart';
@@ -116,6 +118,37 @@ void main() {
     await tester.pump();
     expect(find.text('Projects'), findsOneWidget);
     expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+  });
+
+  testWidgets('EmptyState rata tengah: judul dan deskripsi sejajar',
+      (tester) async {
+    tester.view.physicalSize = const Size(1200, 1200);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    // Ditulis di dalam Column berperataan kiri seperti pemakaian di layar
+    // (Kalender, Beranda, daftar): EmptyState sendiri yang memusatkan teksnya.
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: AppTheme.light(),
+        home: const Scaffold(
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [EmptyState(title: 'A', description: 'B')],
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    final titleRect = tester.getRect(find.text('A'));
+    final descriptionRect = tester.getRect(find.text('B'));
+    final screenCenter =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio / 2;
+
+    expect(titleRect.center.dx, screenCenter);
+    expect(descriptionRect.center.dx, screenCenter);
   });
 
   testWidgets('ListItemTile menampilkan judul, subjudul, dan waktu',

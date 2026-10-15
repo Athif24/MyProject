@@ -184,6 +184,15 @@ class AppStrings {
   static const String noItemsOnDayDescription =
       'Item pada tanggal ini akan tampil di sini.';
 
+  /// Label semantik panah di dasar kartu agenda bersubtugas.
+  static const String showSubtasks = 'Tampilkan subtugas';
+  static const String hideSubtasks = 'Sembunyikan subtugas';
+
+  /// Subjudul kartu agenda yang punya subtugas.
+  /// Contoh: `Tugas · 1/2 subtugas`.
+  static String cardSubtasksSummary(String type, int done, int total) =>
+      '$type · $done/$total subtugas';
+
   /// Contoh: `Mulai 09.00` (hari pertama acara lintas hari).
   static String startsAtTime(String clock) => 'Mulai $clock';
 

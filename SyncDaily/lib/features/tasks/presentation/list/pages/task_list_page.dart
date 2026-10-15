@@ -14,13 +14,8 @@ import 'package:sync_daily/features/tasks/domain/repositories/task_repository.da
 import 'package:sync_daily/features/tasks/domain/task_list_filter.dart';
 import 'package:sync_daily/features/tasks/presentation/list/cubit/task_list_cubit.dart';
 import 'package:sync_daily/features/tasks/presentation/list/cubit/task_list_state.dart';
+import 'package:sync_daily/features/tasks/presentation/widgets/task_detail_flow.dart';
 import 'package:sync_daily/features/tasks/presentation/widgets/task_tile.dart';
-
-/// Durasi tampil snackbar "Urungkan" sebelum hilang sendiri.
-///
-/// `persist: false` wajib: pada SnackBar dengan aksi, `persist` default-nya
-/// `true` sehingga tanpa ini snackbar tidak pernah hilang sendiri.
-const Duration _undoSnackBarDuration = Duration(seconds: 6);
 
 /// Daftar tugas sementara (F4b): pintu masuk menuju layar detail.
 ///
@@ -51,23 +46,11 @@ class _TaskListView extends StatelessWidget {
         TaskListFilter.allTasks => AppStrings.taskListAll,
       };
 
-  Future<void> _openDetail(BuildContext context, Task task) async {
-    final deletedIds = await context.push<List<String>>('/tasks/${task.id}');
-    if (deletedIds == null || deletedIds.isEmpty || !context.mounted) {
-      return;
-    }
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(
-        content: const Text(AppStrings.taskDeleted),
-        duration: _undoSnackBarDuration,
-        persist: false,
-        action: SnackBarAction(
-          label: AppStrings.undo,
-          onPressed: () => context.read<TaskListCubit>().restore(deletedIds),
-        ),
-      ),
+  Future<void> _openDetail(BuildContext context, Task task) {
+    return openTaskDetailWithUndo(
+      context: context,
+      taskId: task.id,
+      onUndo: (ids) => context.read<TaskListCubit>().restore(ids),
     );
   }
 

@@ -15,21 +15,30 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Judul dan deskripsi dibuat selebar ruang yang tersedia lalu dipusatkan,
+    // supaya keduanya selalu rata tengah pada sumbu yang sama, di layar mana pun
+    // EmptyState dipakai (Kalender, Beranda, daftar tugas, detail).
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          title,
-          style: AppTypography.textTheme.titleLarge,
-          textAlign: TextAlign.center,
+        SizedBox(
+          width: double.infinity,
+          child: Text(
+            title,
+            style: AppTypography.textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
         ),
         if (description != null) ...[
           const SizedBox(height: 8),
-          Text(
-            description!,
-            style: AppTypography.textTheme.bodyMedium,
-            textAlign: TextAlign.center,
+          SizedBox(
+            width: double.infinity,
+            child: Text(
+              description!,
+              style: AppTypography.textTheme.bodyMedium,
+              textAlign: TextAlign.center,
+            ),
           ),
         ],
         if (action != null) ...[

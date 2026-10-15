@@ -21,6 +21,17 @@ class ListItemTile extends StatelessWidget {
   /// True bila item sudah selesai: judulnya dicoret (dipakai Kalender, yang
   /// tetap menampilkan item selesai). Bawaan `false` agar tampilan lama sama.
   final bool isCompleted;
+
+  /// Isi tambahan selebar kartu di bawah baris judul, MASIH di dalam area
+  /// ketuk utama (dipakai Kalender untuk daftar sub-tugas). Jarak dan padding
+  /// diatur pemanggil supaya bisa ikut beranimasi. Bawaan `null` agar tampilan
+  /// lama sama.
+  final Widget? footer;
+
+  /// Baris tambahan di dasar kartu, DI LUAR area ketuk utama ([onTap]) supaya
+  /// bisa punya aksi sendiri (dipakai Kalender untuk baris panah sub-tugas).
+  /// Bawaan `null` agar tampilan lama sama.
+  final Widget? bottomBar;
   final VoidCallback? onTap;
 
   const ListItemTile({
@@ -35,6 +46,8 @@ class ListItemTile extends StatelessWidget {
     this.unreadCount = 0,
     this.isUnread = false,
     this.isCompleted = false,
+    this.footer,
+    this.bottomBar,
     this.onTap,
   }) : assert(
           icon != null || avatarName != null,
@@ -48,72 +61,93 @@ class ListItemTile extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       label: title,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: _hasUnread ? AppColors.unreadBg : AppColors.surface,
-            borderRadius: BorderRadius.circular(AppRadius.listItem),
-            border: Border.all(
-              color: _hasUnread ? AppColors.unreadBorder : AppColors.borderSoft,
-            ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _hasUnread ? AppColors.unreadBg : AppColors.surface,
+          borderRadius: BorderRadius.circular(AppRadius.listItem),
+          border: Border.all(
+            color: _hasUnread ? AppColors.unreadBorder : AppColors.borderSoft,
           ),
-          child: Row(
-            children: [
-              _Leading(
-                icon: icon,
-                avatarName: avatarName,
-                iconBackground: iconBackground,
-                iconColor: iconColor,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      title,
-                      style: isCompleted
-                          ? AppTypography.textTheme.titleMedium?.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                              decorationColor: AppColors.textMuted,
-                            )
-                          : AppTypography.textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: AppTypography.textTheme.bodyMedium,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Column(
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            GestureDetector(
+              onTap: onTap,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (time != null)
-                    Text(time!, style: AppTypography.textTheme.bodySmall),
-                  if (_hasUnread) ...[
-                    const SizedBox(height: 6),
-                    unreadCount > 0
-                        ? UnreadBadge(count: unreadCount)
-                        : const UnreadDot(),
-                  ],
+                  Padding(
+                    padding: const EdgeInsets.all(AppSizes.cardPadding),
+                    child: Row(
+                      children: [
+                        _Leading(
+                          icon: icon,
+                          avatarName: avatarName,
+                          iconBackground: iconBackground,
+                          iconColor: iconColor,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                title,
+                                style: isCompleted
+                                    ? AppTypography.textTheme.titleMedium
+                                        ?.copyWith(
+                                        decoration:
+                                            TextDecoration.lineThrough,
+                                        decorationColor: AppColors.textMuted,
+                                      )
+                                    : AppTypography.textTheme.titleMedium,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (subtitle != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  subtitle!,
+                                  style: AppTypography.textTheme.bodyMedium,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            if (time != null)
+                              Text(
+                                time!,
+                                style: AppTypography.textTheme.bodySmall,
+                              ),
+                            if (_hasUnread) ...[
+                              const SizedBox(height: 6),
+                              unreadCount > 0
+                                  ? UnreadBadge(count: unreadCount)
+                                  : const UnreadDot(),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  ?footer,
                 ],
               ),
-            ],
-          ),
+            ),
+            ?bottomBar,
+          ],
         ),
       ),
     );

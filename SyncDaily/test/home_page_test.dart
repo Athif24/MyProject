@@ -11,6 +11,7 @@ import 'package:sync_daily/features/auth/domain/entities/user_profile.dart';
 import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
 import 'package:sync_daily/features/home/presentation/cubit/home_state.dart';
 import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
+import 'package:sync_daily/features/home/presentation/widgets/projects_section.dart';
 import 'package:sync_daily/features/home/presentation/widgets/stat_card.dart';
 import 'package:sync_daily/features/notifications/domain/repositories/notification_repository.dart';
 import 'package:sync_daily/features/projects/domain/entities/project.dart';
@@ -158,6 +159,19 @@ void main() {
 
     expect(find.text('Belum ada proyek'), findsOneWidget);
     expect(find.byType(UnreadBadge), findsNothing);
+
+    // Keadaan kosong rata tengah: judul dan deskripsi sejajar satu sama lain
+    // dan sejajar dengan lebar seksi (konsisten dengan Kalender dan daftar).
+    final sectionCenter =
+        tester.getRect(find.byType(ProjectsSection)).center.dx;
+    expect(
+      tester.getRect(find.text(AppStrings.noProjects)).center.dx,
+      sectionCenter,
+    );
+    expect(
+      tester.getRect(find.text(AppStrings.noProjectsDescription)).center.dx,
+      sectionCenter,
+    );
 
     final stats = statValues(tester);
     expect(stats.values.every((value) => value == 0), isTrue);

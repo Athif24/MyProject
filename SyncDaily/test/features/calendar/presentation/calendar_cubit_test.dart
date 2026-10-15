@@ -43,6 +43,7 @@ void main() {
     String title = 'Item',
     TaskType type = TaskType.task,
     TaskStatus status = TaskStatus.todo,
+    String? parentTaskId,
     DateTime? startAt,
     DateTime? endAt,
     DateTime? dueAt,
@@ -53,6 +54,7 @@ void main() {
       title: title,
       type: type,
       status: status,
+      parentTaskId: parentTaskId,
       startAt: startAt,
       endAt: endAt,
       dueAt: dueAt,
@@ -226,6 +228,120 @@ void main() {
 
     cubit.selectDate(DateTime(2026, 10, 16));
     expect(cubit.state.agenda.single.task.id, 'e1');
+
+    await cubit.close();
+  });
+
+  test('status buka daftar sub-tugas: bawaan tertutup lalu dibalik toggle',
+      () async {
+    final cubit = buildCubit()..start();
+    await settle();
+
+    expect(cubit.state.expandedCardIds, isEmpty);
+
+    cubit.toggleSubtasks('p1');
+    expect(cubit.state.expandedCardIds, {'p1'});
+
+    cubit.toggleSubtasks('p2');
+    expect(cubit.state.expandedCardIds, {'p1', 'p2'});
+
+    cubit.toggleSubtasks('p1');
+    expect(cubit.state.expandedCardIds, {'p2'});
+
+    await cubit.close();
+  });
+
+  test('status buka kartu tetap saat ganti tanggal dan bulan', () async {
+    final cubit = buildCubit()..start();
+    await settle();
+
+    cubit.toggleSubtasks('p1');
+    cubit.selectDate(DateTime(2026, 10, 20));
+    expect(cubit.state.expandedCardIds, {'p1'});
+
+    cubit.nextMonth();
+    expect(cubit.state.expandedCardIds, {'p1'});
+
+    cubit.previousMonth();
+    expect(cubit.state.expandedCardIds, {'p1'});
+
+    await cubit.close();
+  });
+
+  test('status buka kartu hanya untuk sesi: cubit baru mulai dari tertutup',
+      () async {
+    final first = buildCubit()..start();
+    await settle();
+    first.toggleSubtasks('p1');
+    expect(first.state.expandedCardIds, {'p1'});
+    await first.close();
+
+    // Tidak ada jejaknya di database: sesi baru kembali tertutup.
+    final second = buildCubit()..start();
+    await settle();
+    expect(second.state.expandedCardIds, isEmpty);
+
+    await second.close();
+  });
+
+  test('sub-tugas menyatu dengan kartu induk di agenda', () async {
+    await taskRepo.upsertTask(
+      task(id: 'p1', title: 'Induk', dueAt: DateTime(2026, 10, 14, 9)),
+    );
+    await taskRepo.upsertTask(
+      task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      ),
+    );
+
+    final cubit = buildCubit()..start();
+    await settle();
+
+    expect(cubit.state.agenda, hasLength(1));
+    expect(cubit.state.agenda.single.task.id, 'p1');
+    expect(cubit.state.agenda.single.subtasks.single.id, 's1');
+
+    await cubit.close();
+  });
+
+  test('Urungkan memulihkan induk dan sub-tugas: agenda dan titik kembali',
+      () async {
+    await taskRepo.upsertTask(
+      task(id: 'p1', title: 'Induk', dueAt: DateTime(2026, 10, 14, 9)),
+    );
+    await taskRepo.upsertTask(
+      task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      ),
+    );
+
+    final cubit = buildCubit()..start();
+    await settle();
+    expect(cubit.state.agenda.single.subtasks, hasLength(1));
+    expect(cubit.state.daysWithItems[DateTime(2026, 10, 14)], {TaskType.task});
+
+    final deletedIds = await taskRepo.softDeleteTask('p1');
+    await settle();
+
+    // Hapus induk ikut menghapus sub-tugasnya.
+    expect(deletedIds, containsAll(['p1', 's1']));
+    expect(cubit.state.agenda, isEmpty);
+    expect(cubit.state.daysWithItems.containsKey(DateTime(2026, 10, 14)),
+        isFalse);
+
+    await cubit.restore(deletedIds);
+    await settle();
+
+    expect(cubit.state.agenda, hasLength(1));
+    expect(cubit.state.agenda.single.task.id, 'p1');
+    expect(cubit.state.agenda.single.subtasks.single.id, 's1');
+    expect(cubit.state.daysWithItems[DateTime(2026, 10, 14)], {TaskType.task});
 
     await cubit.close();
   });

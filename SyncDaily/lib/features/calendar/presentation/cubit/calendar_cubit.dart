@@ -116,6 +116,24 @@ class CalendarCubit extends Cubit<CalendarState> {
     start();
   }
 
+  /// Memulihkan item yang baru dihapus dari Kalender (aksi "Urungkan").
+  ///
+  /// Id berasal dari `softDeleteTask` sehingga induk dan sub-tugasnya ikut
+  /// pulih; agenda dan titik warna menyusul dari stream yang sama.
+  Future<void> restore(List<String> ids) => _taskRepository.restoreTasks(ids);
+
+  /// Membuka atau menutup daftar sub-tugas satu kartu agenda.
+  ///
+  /// Keadaan hanya untuk sesi layar ini (disimpan di [CalendarState], bukan di
+  /// database) dan tetap saat ganti tanggal atau bulan. Bawaan: tertutup.
+  void toggleSubtasks(String taskId) {
+    final expanded = {...state.expandedCardIds};
+    if (!expanded.remove(taskId)) {
+      expanded.add(taskId);
+    }
+    emit(state.copyWith(expandedCardIds: expanded));
+  }
+
   /// Hari yang sama dengan [state.selectedDate] pada bulan [month], dipangkas
   /// ke hari terakhir [month] bila perlu.
   DateTime _dayInMonth(DateTime month) {

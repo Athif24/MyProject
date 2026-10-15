@@ -16,6 +16,7 @@ import 'package:sync_daily/features/calendar/presentation/widgets/calendar_item_
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_month_grid.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
 import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
+import 'package:sync_daily/features/tasks/presentation/widgets/task_detail_flow.dart';
 
 /// Layar Kalender (F5): grid bulan + agenda tanggal terpilih.
 ///
@@ -42,9 +43,15 @@ const double _bottomInset = AppSizes.navHeight + AppSizes.sectionGap * 2;
 class _CalendarView extends StatelessWidget {
   const _CalendarView();
 
-  /// Membuka detail item yang dipilih di Kalender.
-  void _openDetail(BuildContext context, Task task) {
-    context.push<List<String>>('/tasks/${task.id}');
+  /// Membuka detail item yang dipilih di Kalender. Bila item dihapus di sana,
+  /// kembali ke Kalender dan tampilkan snackbar "Urungkan" seperti di daftar
+  /// tugas.
+  Future<void> _openDetail(BuildContext context, Task task) {
+    return openTaskDetailWithUndo(
+      context: context,
+      taskId: task.id,
+      onUndo: context.read<CalendarCubit>().restore,
+    );
   }
 
   /// Membuka form "Buat baru" dengan tanggal terpilih sudah terisi.
@@ -75,6 +82,8 @@ class _CalendarView extends StatelessWidget {
                     onNextMonth: context.read<CalendarCubit>().nextMonth,
                     onAdd: () => _openNewItem(context, state.selectedDate),
                     onOpenDetail: (task) => _openDetail(context, task),
+                    onToggleSubtasks:
+                        context.read<CalendarCubit>().toggleSubtasks,
                   );
               }
             },
@@ -92,6 +101,7 @@ class _LoadedView extends StatelessWidget {
   final VoidCallback onNextMonth;
   final VoidCallback onAdd;
   final ValueChanged<Task> onOpenDetail;
+  final ValueChanged<String> onToggleSubtasks;
 
   const _LoadedView({
     required this.state,
@@ -100,6 +110,7 @@ class _LoadedView extends StatelessWidget {
     required this.onNextMonth,
     required this.onAdd,
     required this.onOpenDetail,
+    required this.onToggleSubtasks,
   });
 
   @override
@@ -136,6 +147,7 @@ class _LoadedView extends StatelessWidget {
           _Agenda(
             state: state,
             onOpenDetail: onOpenDetail,
+            onToggleSubtasks: onToggleSubtasks,
           ),
         ],
       ),
@@ -155,8 +167,13 @@ String _sectionTitle(CalendarState state) {
 class _Agenda extends StatelessWidget {
   final CalendarState state;
   final ValueChanged<Task> onOpenDetail;
+  final ValueChanged<String> onToggleSubtasks;
 
-  const _Agenda({required this.state, required this.onOpenDetail});
+  const _Agenda({
+    required this.state,
+    required this.onOpenDetail,
+    required this.onToggleSubtasks,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +192,8 @@ class _Agenda extends StatelessWidget {
         for (final entry in state.agenda) ...[
           CalendarItemTile(
             entry: entry,
+            isSubtasksOpen: state.expandedCardIds.contains(entry.task.id),
+            onToggleSubtasks: () => onToggleSubtasks(entry.task.id),
             onTap: () => onOpenDetail(entry.task),
           ),
           if (entry != state.agenda.last)

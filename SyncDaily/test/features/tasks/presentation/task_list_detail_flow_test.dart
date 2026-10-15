@@ -155,6 +155,39 @@ void main() {
     expect(find.text('Semua Tugas'), findsOneWidget);
   });
 
+  testWidgets('keadaan kosong daftar: judul dan deskripsi rata tengah',
+      (tester) async {
+    when(() => taskRepository.watchAllTasks())
+        .thenAnswer((_) => Stream.value(const <Task>[]));
+
+    tester.view.physicalSize = const Size(1200, 2400);
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    AppRouter.router.go('/home');
+    await tester.pumpWidget(const SyncDailyApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.byWidgetPredicate(
+        (widget) =>
+            widget is StatCard && widget.label == AppStrings.statToday,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text(AppStrings.noTasksToday), findsOneWidget);
+    final titleRect = tester.getRect(find.text(AppStrings.noTasksToday));
+    final descriptionRect =
+        tester.getRect(find.text(AppStrings.noTasksTodayDescription));
+    final screenCenter =
+        tester.view.physicalSize.width / tester.view.devicePixelRatio / 2;
+
+    expect(titleRect.center.dx, descriptionRect.center.dx);
+    expect(titleRect.center.dx, screenCenter);
+  });
+
   testWidgets('ketuk kartu, buka detail, hapus, urungkan', (tester) async {
     await pumpToDeletedList(tester);
 

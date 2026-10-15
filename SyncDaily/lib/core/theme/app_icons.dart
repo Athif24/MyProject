@@ -18,6 +18,8 @@ class AppIcons {
   static const IconData flag = Icons.flag_outlined;
   static const IconData folder = Icons.folder_outlined;
   static const IconData check = Icons.check;
+  static const IconData checkCircle = Icons.check_circle_outline;
+  static const IconData circle = Icons.radio_button_unchecked;
   static const IconData back = Icons.arrow_back;
   static const IconData add = Icons.add;
   static const IconData more = Icons.more_horiz;
@@ -27,4 +29,8 @@ class AppIcons {
   static const IconData chevronLeft = Icons.chevron_left;
   static const IconData chevronRight = Icons.chevron_right;
   static const IconData dropdown = Icons.keyboard_arrow_down;
+
+  /// Panah buka/tutup daftar subtugas di kartu agenda Kalender. Diputar 180
+  /// derajat oleh widget saat daftarnya terbuka.
+  static const IconData expand = Icons.expand_more;
 }

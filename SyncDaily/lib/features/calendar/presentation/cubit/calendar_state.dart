@@ -24,6 +24,13 @@ class CalendarState extends Equatable {
   /// Agenda tanggal terpilih.
   final List<CalendarEntry> agenda;
 
+  /// Id item yang kartunya sedang terbuka (daftar sub-tugasnya tampil).
+  ///
+  /// Keadaan sesi layar saja: tidak disimpan ke database dan tetap selama layar
+  /// Kalender hidup (termasuk saat ganti tanggal atau bulan). Bawaan: semua
+  /// kartu tertutup.
+  final Set<String> expandedCardIds;
+
   final String? errorMessage;
 
   const CalendarState({
@@ -33,6 +40,7 @@ class CalendarState extends Equatable {
     required this.today,
     this.daysWithItems = const {},
     this.agenda = const [],
+    this.expandedCardIds = const <String>{},
     this.errorMessage,
   });
 
@@ -43,6 +51,7 @@ class CalendarState extends Equatable {
     DateTime? today,
     Map<DateTime, Set<TaskType>>? daysWithItems,
     List<CalendarEntry>? agenda,
+    Set<String>? expandedCardIds,
     String? errorMessage,
     bool clearError = false,
   }) {
@@ -53,6 +62,7 @@ class CalendarState extends Equatable {
       today: today ?? this.today,
       daysWithItems: daysWithItems ?? this.daysWithItems,
       agenda: agenda ?? this.agenda,
+      expandedCardIds: expandedCardIds ?? this.expandedCardIds,
       errorMessage: clearError ? null : errorMessage ?? this.errorMessage,
     );
   }
@@ -71,6 +81,7 @@ class CalendarState extends Equatable {
         today,
         daysWithItems,
         agenda,
+        expandedCardIds,
         errorMessage,
       ];
 }

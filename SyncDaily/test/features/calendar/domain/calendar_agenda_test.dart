@@ -13,6 +13,7 @@ void main() {
     String id = 't1',
     TaskType type = TaskType.task,
     String title = 'Item',
+    String? parentTaskId,
     DateTime? startAt,
     DateTime? endAt,
     DateTime? dueAt,
@@ -24,6 +25,7 @@ void main() {
       title: title,
       type: type,
       status: status,
+      parentTaskId: parentTaskId,
       startAt: startAt,
       endAt: endAt,
       dueAt: dueAt,
@@ -359,6 +361,145 @@ void main() {
         entries.map((entry) => entry.date).toSet(),
         hasLength(5),
       );
+    });
+  });
+
+  group('sub-tugas di dalam kartu induk', () {
+    final parent = task(
+      id: 'p1',
+      title: 'Induk',
+      dueAt: DateTime(2026, 10, 14, 9),
+    );
+
+    test('sub-tugas menyatu dengan kartu induk pada hari yang sama', () {
+      final sub = task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+
+      final entries = CalendarAgenda.entriesOnDay(
+        tasks: [parent, sub],
+        recurrences: const [],
+        day: DateTime(2026, 10, 14),
+      );
+
+      expect(entries, hasLength(1));
+      expect(entries.single.task.id, 'p1');
+      expect(entries.single.subtasks.map((item) => item.id), ['s1']);
+    });
+
+    test('sub-tugas tanpa induk di hari itu tetap jadi kartu sendiri', () {
+      final indukLainHari = task(
+        id: 'p1',
+        title: 'Induk',
+        dueAt: DateTime(2026, 10, 15, 9),
+      );
+      final sub = task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+
+      final entries = CalendarAgenda.entriesOnDay(
+        tasks: [indukLainHari, sub],
+        recurrences: const [],
+        day: DateTime(2026, 10, 14),
+      );
+
+      expect(entries, hasLength(1));
+      expect(entries.single.task.id, 's1');
+      expect(entries.single.subtasks, isEmpty);
+    });
+
+    test('urutan sub-tugas mengikuti urutan data (seperti layar detail)', () {
+      // Judul sengaja terbalik dari urutan data: urutan judul TIDAK dipakai.
+      final zebra = task(
+        id: 's1',
+        title: 'Zebra',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+      final apel = task(
+        id: 's2',
+        title: 'Apel',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+
+      final entries = CalendarAgenda.entriesOnDay(
+        tasks: [parent, zebra, apel],
+        recurrences: const [],
+        day: DateTime(2026, 10, 14),
+      );
+
+      expect(
+        entries.single.subtasks.map((item) => item.title),
+        ['Zebra', 'Apel'],
+      );
+    });
+
+    test('titik warna tidak berubah walau sub-tugas menyatu', () {
+      // Induk acara + sub-tugas bertipe tugas pada hari yang sama: hari itu
+      // tetap punya dua titik, karena titik dihitung sebelum penggabungan.
+      final acara = task(
+        id: 'e1',
+        type: TaskType.event,
+        title: 'Acara',
+        startAt: DateTime(2026, 10, 14, 9),
+        endAt: DateTime(2026, 10, 14, 11),
+      );
+      final sub = task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'e1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+
+      final result = days(tasks: [acara, sub]);
+
+      expect(result[DateTime(2026, 10, 14)], {
+        TaskType.event,
+        TaskType.task,
+      });
+      expect(
+        CalendarAgenda.entriesOnDay(
+          tasks: [acara, sub],
+          recurrences: const [],
+          day: DateTime(2026, 10, 14),
+        ),
+        hasLength(1),
+      );
+    });
+
+    test('induk berulang: sub-tugas hanya tampil pada tanggalnya sendiri', () {
+      // Sub-tugas tidak berulang, jadi kemunculan induk di hari lain tampil
+      // tanpa daftar sub-tugas.
+      final sub = task(
+        id: 's1',
+        title: 'Anak',
+        parentTaskId: 'p1',
+        dueAt: DateTime(2026, 10, 14, 9),
+      );
+      final rules = [rule('p1', RecurrenceFrequency.daily)];
+
+      final hariIni = CalendarAgenda.entriesOnDay(
+        tasks: [parent, sub],
+        recurrences: rules,
+        day: DateTime(2026, 10, 14),
+      );
+      expect(hariIni.single.task.id, 'p1');
+      expect(hariIni.single.subtasks.map((item) => item.id), ['s1']);
+
+      final hariBerikut = CalendarAgenda.entriesOnDay(
+        tasks: [parent, sub],
+        recurrences: rules,
+        day: DateTime(2026, 10, 15),
+      );
+      expect(hariBerikut.single.task.id, 'p1');
+      expect(hariBerikut.single.subtasks, isEmpty);
     });
   });
 
