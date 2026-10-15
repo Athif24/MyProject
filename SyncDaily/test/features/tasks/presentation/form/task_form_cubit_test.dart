@@ -658,4 +658,208 @@ void main() {
       await cubit.close();
     });
   });
+
+  group('acara: Selesai ikut bergeser saat Mulai diubah', () {
+    test('ubah tanggal Mulai: durasi tetap', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 10, 30));
+
+      // Pengguna memilih tanggal Mulai lain (jamnya tetap 09.00, WIB).
+      cubit.setStartAt(DateTime(2026, 10, 16, 9));
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 16, 9));
+      expect(cubit.state.endAt, DateTime(2026, 10, 16, 10, 30));
+
+      cubit.setTitle('Rapat');
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.startAt!.isAtSameMomentAs(DateTime(2026, 10, 16, 9)), isTrue);
+      expect(
+        task.endAt!.isAtSameMomentAs(DateTime(2026, 10, 16, 10, 30)),
+        isTrue,
+      );
+      await cubit.close();
+    });
+
+    test('ubah jam Mulai: durasi tetap', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 10, 30));
+
+      cubit.setStartAt(DateTime(2026, 10, 14, 14, 15));
+
+      expect(cubit.state.endAt, DateTime(2026, 10, 14, 15, 45));
+      await cubit.close();
+    });
+
+    test('durasi lintas tengah malam tetap saat Mulai digeser', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 23));
+      cubit.setEndAt(DateTime(2026, 10, 15, 1));
+
+      cubit.setStartAt(DateTime(2026, 10, 20, 23));
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 20, 23));
+      expect(cubit.state.endAt, DateTime(2026, 10, 21, 1));
+      await cubit.close();
+    });
+
+    test('acara seharian: selisih hari tetap dan tersimpan sebagai tanggal '
+        'kalender UTC', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setIsAllDay(true);
+      cubit.setStartAt(DateTime(2026, 10, 14));
+      cubit.setEndAt(DateTime(2026, 10, 16));
+
+      cubit.setStartAt(DateTime(2026, 10, 20));
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 20));
+      expect(cubit.state.endAt, DateTime(2026, 10, 22));
+
+      cubit.setTitle('Liburan');
+      await cubit.save();
+
+      final task = (await taskRepo.watchAllTasks().first).single;
+      expect(task.isAllDay, isTrue);
+      expect(task.startAt!.toUtc(), DateTime.utc(2026, 10, 20));
+      expect(task.endAt!.toUtc(), DateTime.utc(2026, 10, 22));
+      expect(TaskDateUtils.isOnDay(task, DateTime(2026, 10, 20)), isTrue);
+      await cubit.close();
+    });
+
+    test('mode ubah acara berjam: dimuat apa adanya, lalu ikut bergeser',
+        () async {
+      await taskRepo.upsertTask(Task(
+        id: 'e1',
+        title: 'Rapat',
+        type: TaskType.event,
+        startAt: DateTime(2026, 10, 14, 9),
+        endAt: DateTime(2026, 10, 14, 10),
+        createdAt: fixedNow.toUtc(),
+        updatedAt: fixedNow.toUtc(),
+      ));
+
+      final cubit = await startCubit(taskId: 'e1');
+
+      // Dimuat TIDAK menggeser Selesai.
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, DateTime(2026, 10, 14, 10));
+
+      cubit.setStartAt(DateTime(2026, 10, 17, 8));
+
+      expect(cubit.state.endAt, DateTime(2026, 10, 17, 9));
+
+      await cubit.save(editingTaskId: 'e1');
+      final task = await taskRepo.getTask('e1');
+      expect(task!.endAt!.isAtSameMomentAs(DateTime(2026, 10, 17, 9)), isTrue);
+      await cubit.close();
+    });
+
+    test('mode ubah acara seharian: dimuat apa adanya, lalu ikut bergeser '
+        '(simulasi WIB)', () async {
+      // Data tersimpan sebagai tanggal kalender UTC.
+      await taskRepo.upsertTask(Task(
+        id: 'e1',
+        title: 'Liburan',
+        type: TaskType.event,
+        isAllDay: true,
+        startAt: DateTime.utc(2026, 10, 14),
+        endAt: DateTime.utc(2026, 10, 16),
+        createdAt: fixedNow.toUtc(),
+        updatedAt: fixedNow.toUtc(),
+      ));
+
+      final cubit = await startCubit(taskId: 'e1');
+
+      // Dimuat TIDAK menggeser Selesai (tanggal kalender tetap).
+      expect(_calendarFields(cubit.state.startAt!), [2026, 10, 14]);
+      expect(_calendarFields(cubit.state.endAt!), [2026, 10, 16]);
+
+      cubit.setStartAt(DateTime(2026, 10, 20));
+
+      expect(_calendarFields(cubit.state.startAt!), [2026, 10, 20]);
+      expect(_calendarFields(cubit.state.endAt!), [2026, 10, 22]);
+
+      await cubit.save(editingTaskId: 'e1');
+      final task = await taskRepo.getTask('e1');
+      expect(task!.endAt!.toUtc(), DateTime.utc(2026, 10, 22));
+      await cubit.close();
+    });
+
+    test('Selesai kosong: mengubah Mulai tidak menggeser apa pun', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+
+      cubit.setStartAt(DateTime(2026, 10, 20, 14));
+      expect(cubit.state.startAt, DateTime(2026, 10, 20, 14));
+      expect(cubit.state.endAt, isNull);
+
+      // Sama untuk acara seharian.
+      cubit.setIsAllDay(true);
+      cubit.setStartAt(DateTime(2026, 10, 22));
+      expect(cubit.state.startAt, DateTime(2026, 10, 22));
+      expect(cubit.state.endAt, isNull);
+      await cubit.close();
+    });
+
+    test('mengubah Selesai tidak menggeser Mulai', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 10));
+
+      cubit.setEndAt(DateTime(2026, 10, 18, 15));
+
+      expect(cubit.state.startAt, DateTime(2026, 10, 14, 9));
+      expect(cubit.state.endAt, DateTime(2026, 10, 18, 15));
+      await cubit.close();
+    });
+
+    test('mengganti tipe tidak menggeser Selesai', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 17));
+
+      cubit.setType(TaskType.event);
+
+      expect(cubit.state.endAt, DateTime(2026, 10, 14, 17));
+      await cubit.close();
+    });
+
+    test('menyimpan setelah mengubah Mulai tidak memunculkan galat urutan '
+        'waktu', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setTitle('Rapat');
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 10));
+
+      // Geser Mulai ke hari berikutnya tanpa menyentuh Selesai.
+      cubit.setStartAt(DateTime(2026, 10, 15, 9));
+
+      await cubit.save();
+
+      expect(cubit.state.errorMessage, isNull);
+      expect(cubit.state.status, TaskFormStatus.saved);
+      await cubit.close();
+    });
+
+    test('Selesai tetap tidak valid bila pengguna sengaja membuatnya lebih '
+        'awal', () async {
+      final cubit = await startCubit(type: TaskType.event);
+      cubit.setTitle('Rapat');
+      cubit.setStartAt(DateTime(2026, 10, 14, 9));
+      cubit.setEndAt(DateTime(2026, 10, 14, 10));
+
+      // Mengubah Selesai (bukan Mulai) tetap divalidasi seperti semula.
+      cubit.setEndAt(DateTime(2026, 10, 14, 8));
+
+      await cubit.save();
+      expect(cubit.state.errorMessage, AppStrings.endBeforeStart);
+      await cubit.close();
+    });
+  });
 }
+
+/// Komponen tanggal kalender (tahun, bulan, hari) dari sebuah waktu.
+List<int> _calendarFields(DateTime value) => [value.year, value.month, value.day];

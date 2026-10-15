@@ -303,9 +303,56 @@ class TaskFormCubit extends Cubit<TaskFormState> {
 
   void setIsAllDay(bool value) => emit(state.copyWith(isAllDay: value));
 
-  void setStartAt(DateTime? value) => emit(value == null
-      ? state.copyWith(clearStartAt: true)
-      : state.copyWith(startAt: value));
+  /// Mengubah waktu Mulai.
+  ///
+  /// Khusus tipe Acara: bila Selesai sudah terisi, Selesai ikut bergeser dengan
+  /// selisih yang sama seperti sebelum Mulai diubah (durasi untuk acara berjam,
+  /// selisih hari kalender untuk acara seharian). Penggeseran hanya terjadi
+  /// karena perubahan dari pengguna; memuat form dan mengganti tipe tidak
+  /// menggeser apa pun.
+  void setStartAt(DateTime? value) {
+    final previous = state.startAt;
+    if (value == null) {
+      emit(state.copyWith(clearStartAt: true));
+      return;
+    }
+    emit(state.copyWith(startAt: value));
+    if (previous != null) {
+      _shiftEndWithStart(previous, value);
+    }
+  }
+
+  /// Menggeser Selesai mengikuti perubahan Mulai pada Acara.
+  void _shiftEndWithStart(DateTime previous, DateTime value) {
+    if (state.type != TaskType.event) {
+      return;
+    }
+    final end = state.endAt;
+    if (end == null) {
+      return;
+    }
+    if (state.isAllDay) {
+      final days = _calendarDay(value) - _calendarDay(previous);
+      if (days == 0) {
+        return;
+      }
+      emit(state.copyWith(
+        endAt: _dateOnly(end).add(Duration(days: days)),
+      ));
+      return;
+    }
+    // Acara berjam: durasi (selisih waktu) tetap.
+    emit(state.copyWith(endAt: value.add(end.difference(previous))));
+  }
+
+  static DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  /// Hitungan hari kalender dari komponen tanggal, bebas zona waktu.
+  static int _calendarDay(DateTime value) =>
+      DateTime.utc(value.year, value.month, value.day)
+          .millisecondsSinceEpoch ~/
+      Duration.millisecondsPerDay;
 
   void setEndAt(DateTime? value) => emit(value == null
       ? state.copyWith(clearEndAt: true)
