@@ -54,9 +54,9 @@ class AppShell extends StatelessWidget {
               context.go('/calendar');
               break;
             case 4:
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Buat baru - akan diimplementasikan')),
-              );
+              // Pintu masuk sementara (F4a). F7 menggantinya dengan panel
+              // "Buat baru".
+              context.push('/tasks/new');
               break;
           }
         },

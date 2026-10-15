@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/database/app_database.dart';
+import 'package:sync_daily/core/router/app_router.dart';
+import 'package:sync_daily/core/strings/app_strings.dart';
+import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/greeting.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
@@ -56,13 +59,19 @@ void main() {
     expect(find.text(Greeting.forTime(DateTime.now())), findsOneWidget);
   });
 
-  testWidgets('Tombol + menampilkan snackbar sementara', (tester) async {
+  testWidgets('Tombol + membuka form buat baru', (tester) async {
     await tester.pumpWidget(const SyncDailyApp());
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-    expect(find.text('Buat baru - akan diimplementasikan'), findsOneWidget);
+    await tester.tap(find.byIcon(AppIcons.add));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.newItem), findsOneWidget);
+
+    // Router bersifat global antar tes: tutup form agar tes berikutnya mulai
+    // dari Beranda.
+    AppRouter.router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byType(AppBottomNav), findsOneWidget);
   });
 
   testWidgets('Bottom nav tidak overflow pada layar sempit 320dp',

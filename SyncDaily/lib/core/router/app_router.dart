@@ -7,6 +7,8 @@ import 'package:sync_daily/features/chat/presentation/pages/chat_page.dart';
 import 'package:sync_daily/features/debug/presentation/pages/component_gallery_page.dart';
 import 'package:sync_daily/features/home/presentation/pages/home_page.dart';
 import 'package:sync_daily/features/notes/presentation/pages/notes_page.dart';
+import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
+import 'package:sync_daily/features/tasks/presentation/form/pages/task_form_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -58,6 +60,34 @@ class AppRouter {
           name: 'debug-components',
           builder: (context, state) => const ComponentGalleryPage(),
         ),
+      GoRoute(
+        path: '/tasks/new',
+        name: 'task-new',
+        builder: (context, state) {
+          final type = state.uri.queryParameters['type'];
+          return TaskFormPage(initialType: _parseType(type));
+        },
+      ),
+      GoRoute(
+        path: '/tasks/:id/edit',
+        name: 'task-edit',
+        builder: (context, state) => TaskFormPage(
+          taskId: state.pathParameters['id'],
+        ),
+      ),
     ],
   );
+}
+
+TaskType _parseType(String? value) {
+  switch (value) {
+    case 'event':
+      return TaskType.event;
+    case 'reminder':
+      return TaskType.reminder;
+    case 'milestone':
+      return TaskType.milestone;
+    default:
+      return TaskType.task;
+  }
 }

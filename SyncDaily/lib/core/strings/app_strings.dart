@@ -74,4 +74,52 @@ class AppStrings {
   static String deleteProjectBody(String projectTitle) =>
       '"$projectTitle" beserta seluruh tugasnya akan dihapus.';
   static const String projectDeleted = 'Proyek dihapus';
+
+  // Form tugas/acara/pengingat/milestone
+  static const String formTitleTask = 'Tugas';
+  static const String formTitleEvent = 'Acara';
+  static const String formTitleReminder = 'Pengingat';
+  static const String formTitleMilestone = 'Milestone';
+  static const String newItem = 'Buat baru';
+  static const String editItem = 'Ubah';
+  static const String save = 'Simpan';
+  static const String type = 'Tipe';
+  static const String title = 'Judul';
+  static const String description = 'Deskripsi';
+  static const String priority = 'Prioritas';
+  static const String project = 'Proyek';
+  static const String subtask = 'Sub-tugas';
+  static const String recurrence = 'Pengulangan';
+  static const String reminderLabel = 'Pengingat';
+  static const String allDay = 'Sepanjang hari';
+  static const String startAt = 'Mulai';
+  static const String endAt = 'Selesai';
+  static const String dueDate = 'Tenggat';
+  static const String dueTarget = 'Target';
+  static const String noProject = 'Tanpa proyek';
+  static const String addSubtask = 'Tambah sub-tugas';
+  static const String titleRequired = 'Judul wajib diisi';
+  static const String startRequired = 'Waktu mulai wajib diisi';
+  static const String endRequired = 'Waktu selesai wajib diisi';
+  static const String dueRequired = 'Tenggat wajib diisi';
+  static const String endBeforeStart = 'Waktu selesai tidak boleh sebelum mulai';
+  static const String none = 'Tidak';
+  static const String daily = 'Harian';
+  static const String weekly = 'Mingguan';
+  static const String monthly = 'Bulanan';
+  static const String remind10Min = '10 menit sebelum';
+  static const String remind1Hour = '1 jam sebelum';
+  static const String remind1Day = '1 hari sebelum';
+  static const String remindOnTime = 'Tepat waktu';
+  static const String priorityLow = 'Rendah';
+  static const String priorityMedium = 'Sedang';
+  static const String priorityHigh = 'Tinggi';
+  static const String removeSubtask = 'Hapus sub-tugas';
+  static const String editSubtask = 'Ubah sub-tugas';
+  static const String pickDate = 'Pilih tanggal';
+  static const String pickTime = 'Pilih waktu';
+  static const String unsavedTitle = 'Buang perubahan?';
+  static const String unsavedBody = 'Perubahan yang belum disimpan akan hilang.';
+  static const String keepEditing = 'Lanjut mengubah';
+  static const String discard = 'Buang';
 }

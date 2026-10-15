@@ -21,6 +21,8 @@ class AppIcons {
   static const IconData back = Icons.arrow_back;
   static const IconData add = Icons.add;
   static const IconData more = Icons.more_horiz;
+  static const IconData edit = Icons.edit_outlined;
+  static const IconData close = Icons.close;
   static const IconData chevronRight = Icons.chevron_right;
   static const IconData dropdown = Icons.keyboard_arrow_down;
 }

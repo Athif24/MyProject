@@ -40,6 +40,8 @@ void registerMockRepositories() {
   final projectRepository = MockProjectRepository();
   when(() => projectRepository.watchProjectsWithCounts())
       .thenAnswer((_) => Stream.value(const []));
+  when(() => projectRepository.watchProjects())
+      .thenAnswer((_) => Stream.value(const []));
 
   final notificationRepository = MockNotificationRepository();
   when(() => notificationRepository.watchUnreadCount())
