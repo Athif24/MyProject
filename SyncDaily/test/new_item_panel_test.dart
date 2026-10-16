@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/database/app_database.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/router/app_router.dart';
@@ -14,6 +15,10 @@ import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/app_chip.dart';
 import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
+import 'package:sync_daily/features/calendar/presentation/widgets/calendar_month_grid.dart';
+import 'package:sync_daily/features/tasks/domain/entities/task.dart';
+import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
+import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
 import 'package:sync_daily/main.dart';
 
 import 'helpers/test_dependencies.dart';
@@ -41,6 +46,14 @@ void main() {
 
   setUpAll(() async {
     await IdDate.ensureInitialized();
+    // Untuk `captureAny()` pada verifikasi item yang disimpan.
+    registerFallbackValue(Task(
+      id: 'fallback',
+      title: 'fallback',
+      type: TaskType.task,
+      createdAt: DateTime(2026),
+      updatedAt: DateTime(2026),
+    ));
   });
 
   setUp(() async {
@@ -78,13 +91,14 @@ void main() {
             (chip) => chip.label == label && chip.isActive,
           );
 
-  /// Membuka aplikasi dari Beranda; [rootKey] dipakai tes piksel.
+  /// Membuka aplikasi dari rute [initialRoute]; [rootKey] dipakai tes piksel.
   Future<void> pumpApp(
     WidgetTester tester, {
     Size size = const Size(400, 800),
     Key? rootKey,
+    String initialRoute = '/home',
   }) async {
-    AppRouter.router.go('/home');
+    AppRouter.router.go(initialRoute);
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -96,6 +110,11 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  /// Sel tanggal pada grid bulan Kalender.
+  Finder dayCell(DateTime date) => find.byWidgetPredicate(
+        (widget) => widget is CalendarDayCell && widget.day.date == date,
+      );
 
   /// Mengetuk + lalu memajukan animasi per frame, memeriksa luapan tiap frame.
   Future<void> openPanel(WidgetTester tester) async {
@@ -123,6 +142,13 @@ void main() {
       );
     }
     expect(find.text(AppStrings.newPanelTitle), findsNothing);
+  }
+
+  /// Membuka panel dari tab yang sedang aktif, lalu mengetuk ubin [label].
+  Future<void> pickTile(WidgetTester tester, String label) async {
+    await openPanel(tester);
+    await tester.tap(tile(label));
+    await tester.pumpAndSettle();
   }
 
   /// Membaca piksel (RGBA) frame yang terakhir dilukis.
@@ -516,5 +542,161 @@ void main() {
       height: height,
       label: 'Kalender',
     );
+  });
+
+  group('tanggal Kalender pada panel', () {
+    /// Tanggal di bulan berjalan yang dipilih di Kalender (hari ke-2 selalu
+    /// ada, dan biasanya bukan "hari ini").
+    DateTime selectedDay() => DateTime(DateTime.now().year, DateTime.now().month, 2);
+
+    testWidgets('tiap ubin membawa tanggal terpilih sesuai bawaan tipenya',
+        (tester) async {
+      final day = selectedDay();
+      await pumpApp(tester, initialRoute: '/calendar');
+
+      await tester.tap(dayCell(day));
+      await tester.pumpAndSettle();
+
+      // Tugas: seharian pada tanggal itu (label tanpa jam).
+      await pickTile(tester, AppStrings.newPanelTask);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=task&date=${IdDate.isoDate(day)}',
+      );
+      expect(find.text(IdDate.full(day)), findsOneWidget);
+      expect(tester.testTextInput.isVisible, isFalse);
+      AppRouter.router.pop();
+      await tester.pumpAndSettle();
+
+      // Acara: 09.00 sampai 10.00 di tanggal itu.
+      await pickTile(tester, AppStrings.newPanelEvent);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=event&date=${IdDate.isoDate(day)}',
+      );
+      expect(find.text('${IdDate.full(day)} · 09.00'), findsOneWidget);
+      expect(find.text('${IdDate.full(day)} · 10.00'), findsOneWidget);
+      AppRouter.router.pop();
+      await tester.pumpAndSettle();
+
+      // Pengingat: 09.00 di tanggal itu.
+      await pickTile(tester, AppStrings.newPanelReminder);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=reminder&date=${IdDate.isoDate(day)}',
+      );
+      expect(find.text('${IdDate.full(day)} · 09.00'), findsOneWidget);
+      AppRouter.router.pop();
+      await tester.pumpAndSettle();
+
+      // Milestone: seharian pada tanggal itu.
+      await pickTile(tester, AppStrings.newPanelMilestone);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=milestone&date=${IdDate.isoDate(day)}',
+      );
+      expect(find.text(IdDate.full(day)), findsOneWidget);
+      AppRouter.router.pop();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('tanggal yang baru dipilih ikut terbawa (ganti tanggal dan '
+        'bulan)', (tester) async {
+      final day = selectedDay();
+      await pumpApp(tester, initialRoute: '/calendar');
+
+      await tester.tap(dayCell(day));
+      await tester.pumpAndSettle();
+
+      // Pindah bulan lalu pilih tanggal di bulan itu.
+      await tester.tap(find.byIcon(AppIcons.chevronLeft));
+      await tester.pumpAndSettle();
+      final otherMonth = DateTime(day.year, day.month - 1, 10);
+      await tester.tap(dayCell(otherMonth));
+      await tester.pumpAndSettle();
+
+      await pickTile(tester, AppStrings.newPanelTask);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=task&date=${IdDate.isoDate(otherMonth)}',
+      );
+      expect(find.text(IdDate.full(otherMonth)), findsOneWidget);
+    });
+
+    testWidgets('tugas dari panel Kalender tersimpan seharian pada tanggal '
+        'tersebut (simulasi zona WIB)', (tester) async {
+      final day = selectedDay();
+      final taskRepository = getIt<TaskRepository>();
+      await pumpApp(tester, initialRoute: '/calendar');
+
+      await tester.tap(dayCell(day));
+      await tester.pumpAndSettle();
+      await pickTile(tester, AppStrings.newPanelTask);
+
+      await tester.enterText(find.byType(TextField).first, 'Rapat tim');
+      await tester.pump();
+      await tester.tap(find.text(AppStrings.save));
+      await tester.pumpAndSettle();
+
+      final captured =
+          verify(() => taskRepository.upsertTask(captureAny())).captured;
+      expect(captured, hasLength(1));
+      final saved = captured.single as Task;
+
+      // Perangkat WIB: tanggal 2 Okt (lokal) tersimpan sebagai tengah malam
+      // UTC tanggal kalender yang sama, dan tetap seharian.
+      expect(saved.isAllDay, isTrue);
+      expect(saved.dueAt!.toUtc(), DateTime.utc(day.year, day.month, day.day));
+    });
+
+    testWidgets('tanggal Kalender tidak terbawa ke panel dari tab lain',
+        (tester) async {
+      final day = selectedDay();
+      final today = DateTime(DateTime.now().year, DateTime.now().month,
+          DateTime.now().day);
+      await pumpApp(tester, initialRoute: '/calendar');
+
+      await tester.tap(dayCell(day));
+      await tester.pumpAndSettle();
+
+      // Dari Beranda, Pesan, dan Catatan: form tanpa parameter tanggal.
+      for (final icon in [AppIcons.home, AppIcons.chat, AppIcons.notes]) {
+        await tester.tap(navItem(icon));
+        await tester.pumpAndSettle();
+
+        await pickTile(tester, AppStrings.newPanelTask);
+        expect(AppRouter.router.state.uri.toString(), '/tasks/new?type=task');
+        expect(find.text(AppStrings.pickDate), findsOneWidget);
+        expect(find.text(IdDate.full(day)), findsNothing);
+
+        AppRouter.router.pop();
+        await tester.pumpAndSettle();
+      }
+
+      // Kembali ke Kalender: panel memakai tanggal terpilih yang berlaku di
+      // sana saat itu (layar Kalender dimuat ulang, jadi kembali ke hari ini),
+      // bukan tanggal lama dari tab lain.
+      await tester.tap(navItem(AppIcons.calendar));
+      await tester.pumpAndSettle();
+      await pickTile(tester, AppStrings.newPanelTask);
+      expect(
+        AppRouter.router.state.uri.toString(),
+        '/tasks/new?type=task&date=${IdDate.isoDate(today)}',
+      );
+    });
+
+    testWidgets('catatan dari panel Kalender tidak membawa tanggal',
+        (tester) async {
+      final day = selectedDay();
+      await pumpApp(tester, initialRoute: '/calendar');
+
+      await tester.tap(dayCell(day));
+      await tester.pumpAndSettle();
+
+      await pickTile(tester, AppStrings.newPanelNote);
+
+      expect(AppRouter.router.state.uri.toString(), '/notes/new');
+      expect(find.text(AppStrings.noteNew), findsOneWidget);
+    });
   });
 }

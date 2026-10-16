@@ -12,9 +12,9 @@ import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/category_theme.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
+import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
 import 'package:sync_daily/core/widgets/list_item_tile.dart';
 import 'package:sync_daily/core/widgets/section_header.dart';
-import 'package:sync_daily/features/calendar/presentation/widgets/calendar_add_button.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_item_tile.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_month_grid.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -168,6 +168,29 @@ void main() {
         (widget) => widget is CalendarDayCell && widget.day.date == date,
       );
 
+  /// Tombol + di navigasi bawah (pintu tambah satu-satunya).
+  Finder plusButton() => find.descendant(
+        of: find.byType(AppBottomNav),
+        matching: find.byIcon(AppIcons.add),
+      );
+
+  /// Membuka panel "Buat Baru" lewat tombol + navigasi bawah.
+  Future<void> openNewPanel(WidgetTester tester) async {
+    await tester.tap(plusButton());
+    await tester.pumpAndSettle();
+  }
+
+  /// Mengetuk ubin [label] pada panel "Buat Baru".
+  Future<void> tapPanelTile(WidgetTester tester, String label) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppNewItemPanel),
+        matching: find.text(label),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
   /// Kartu agenda yang memuat judul [title].
   Finder cardOf(String title) => find.ancestor(
         of: find.text(title),
@@ -292,15 +315,15 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('tombol tambah membuka form dengan tanggal terpilih terisi',
-      (tester) async {
+  testWidgets('panel dari tombol + navigasi membuka form dengan tanggal '
+      'terpilih terisi', (tester) async {
     await pumpCalendar(tester);
 
     await tester.tap(dayCell(day2));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byType(CalendarAddButton));
-    await tester.pumpAndSettle();
+    await openNewPanel(tester);
+    await tapPanelTile(tester, AppStrings.newPanelTask);
 
     expect(find.text(AppStrings.newItem), findsOneWidget);
     expect(find.textContaining(IdDate.full(day2)), findsOneWidget);
@@ -310,6 +333,23 @@ void main() {
 
     AppRouter.router.pop();
     await tester.pumpAndSettle();
+  });
+
+  testWidgets('judul seksi tanpa tombol tambah dan tingginya tetap',
+      (tester) async {
+    await pumpCalendar(tester);
+
+    // Satu pintu tambah = tombol + di navigasi bawah: judul seksi tidak lagi
+    // membawa tombol tambah ungu.
+    final header = tester.widget<SectionHeader>(find.byType(SectionHeader));
+    expect(header.trailing, isNull);
+
+    // Tinggi baris judul seksi dipertahankan setinggi target sentuh (seperti
+    // saat tombolnya masih ada) supaya agenda di bawahnya tidak bergeser.
+    expect(
+      tester.getSize(find.byType(SectionHeader)).height,
+      AppSizes.minTouchTarget,
+    );
   });
 
   testWidgets('tata letak tidak meluap pada layar sempit (320 dp)',
@@ -594,8 +634,8 @@ void main() {
           ),
       ];
 
-  testWidgets('grid bulan, judul seksi, dan tombol tambah tetap saat agenda '
-      'digulir', (tester) async {
+  testWidgets('grid bulan dan judul seksi tetap saat agenda digulir',
+      (tester) async {
     when(() => taskRepository.watchAllTasks())
         .thenAnswer((_) => Stream.value(manyTasks(15)));
 
@@ -607,8 +647,7 @@ void main() {
     final gridTop = tester.getTopLeft(find.byType(CalendarMonthGrid)).dy;
     final titleTop = tester.getTopLeft(find.text(AppStrings.screenCalendar)).dy;
     final sectionTop = tester.getTopLeft(find.byType(SectionHeader)).dy;
-    final addBottom =
-        tester.getBottomLeft(find.byType(CalendarAddButton)).dy;
+    final sectionHeight = tester.getSize(find.byType(SectionHeader)).height;
     final firstCardTop = tester.getTopLeft(cardOf('Agenda 1')).dy;
 
     await tester.drag(find.byType(Scrollable), const Offset(0, -300));
@@ -619,13 +658,13 @@ void main() {
       tester.getTopLeft(cardOf('Agenda 1')).dy,
       lessThan(firstCardTop - 200),
     );
-    // ...tetapi grid bulan (beserta nama bulan), judul seksi, dan tombol
-    // tambah tetap di tempatnya.
+    // ...tetapi grid bulan (beserta nama bulan) dan judul seksi tetap di
+    // tempatnya.
     expect(tester.getTopLeft(find.byType(CalendarMonthGrid)).dy, gridTop);
     expect(find.text(IdDate.monthYear(today)), findsOneWidget);
     expect(tester.getTopLeft(find.text(AppStrings.screenCalendar)).dy, titleTop);
     expect(tester.getTopLeft(find.byType(SectionHeader)).dy, sectionTop);
-    expect(tester.getBottomLeft(find.byType(CalendarAddButton)).dy, addBottom);
+    expect(tester.getSize(find.byType(SectionHeader)).height, sectionHeight);
   });
 
   testWidgets('kartu agenda terakhir tidak tertutup bilah navigasi bawah',

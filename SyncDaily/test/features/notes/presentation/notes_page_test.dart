@@ -7,7 +7,6 @@ import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
-import 'package:sync_daily/core/widgets/app_add_button.dart';
 import 'package:sync_daily/core/widgets/app_chip.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
 import 'package:sync_daily/core/widgets/app_search_field.dart';
@@ -114,7 +113,6 @@ void main() {
 
       expect(find.text(AppStrings.screenNotes), findsOneWidget);
       expect(find.byType(AppSearchField), findsOneWidget);
-      expect(find.byType(AppAddButton), findsOneWidget);
       for (final label in [
         AppStrings.noteCategoryAll,
         AppStrings.noteCategoryPersonal,
@@ -235,13 +233,19 @@ void main() {
       );
     });
 
-    testWidgets('tombol + membuka form catatan baru', (tester) async {
+    testWidgets('tidak punya tombol tambah di layar Catatan', (tester) async {
       await pumpNotes(tester);
 
-      await tester.tap(find.byType(AppAddButton));
-      await tester.pumpAndSettle();
-
-      expect(find.text(AppStrings.noteNew), findsOneWidget);
+      // Penambahan catatan lewat satu pintu: panel "Buat Baru" pada tombol +
+      // navigasi bawah. Baris judul hanya berisi judul dan tombol ganti
+      // tampilan (tanpa tombol + ungu).
+      final titleRow = find.ancestor(
+        of: find.text(AppStrings.screenNotes),
+        matching: find.byType(Row),
+      );
+      expect(titleRow, findsOneWidget);
+      expect(tester.widget<Row>(titleRow).children, hasLength(2));
+      expect(find.byType(AppIconButton), findsOneWidget);
     });
   });
 
@@ -256,13 +260,12 @@ void main() {
         await pumpNotes(tester, physicalSize: size * 3);
 
         // FAB galeri debug pindah ke kiri bawah: tidak lagi menutupi ikon
-        // ganti tampilan maupun tombol + di header.
+        // ganti tampilan di header.
         final fab = tester.getRect(find.byType(FloatingActionButton));
         expect(
           fab.overlaps(tester.getRect(find.byType(AppIconButton))),
           isFalse,
         );
-        expect(fab.overlaps(tester.getRect(find.byType(AppAddButton))), isFalse);
 
         // Ketukan di tengah ikon mengubah tampilan -> tidak tertutup FAB.
         await tapViewToggle(tester);

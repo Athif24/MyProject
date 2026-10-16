@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:sync_daily/core/database/app_database.dart';
+import 'package:sync_daily/core/state/calendar_selection.dart';
 import 'package:sync_daily/features/auth/data/repositories/user_profile_repository_impl.dart';
 import 'package:sync_daily/features/auth/domain/repositories/user_profile_repository.dart';
 import 'package:sync_daily/features/debug/data/debug_data_seeder.dart';
@@ -39,6 +40,10 @@ Future<void> configureDependencies({AppDatabase? database}) async {
   getIt.registerLazySingleton<UserProfileRepository>(
     UserProfileRepositoryImpl.new,
   );
+
+  // Keadaan sesi layar (bukan data): tanggal terpilih di Kalender untuk panel
+  // "Buat Baru". Lihat [CalendarSelection].
+  getIt.registerLazySingleton<CalendarSelection>(CalendarSelection.new);
 
   if (kDebugMode) {
     getIt.registerLazySingleton<DebugDataSeeder>(

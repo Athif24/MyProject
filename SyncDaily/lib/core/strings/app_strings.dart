@@ -183,7 +183,6 @@ class AppStrings {
   // Kalender (F5).
   static const String previousMonth = 'Bulan sebelumnya';
   static const String nextMonth = 'Bulan berikutnya';
-  static const String addItem = 'Tambah item';
   static const String calendarTodaySection = 'Tugas Hari Ini';
 
   /// Contoh: `Tugas 14 Okt` (tanggal selain hari ini).
@@ -191,7 +190,7 @@ class AppStrings {
 
   static const String noItemsOnDay = 'Belum ada item';
   static const String noItemsOnDayDescription =
-      'Item pada tanggal ini akan tampil di sini.';
+      'Ketuk + di bawah untuk menambah item pada tanggal ini.';
 
   /// Label semantik panah di dasar kartu agenda bersubtugas.
   static const String showSubtasks = 'Tampilkan subtugas';
@@ -225,7 +224,6 @@ class AppStrings {
   static const String noteViewGrid = 'Tampilan grid';
   static const String noteViewList = 'Tampilan daftar';
   static const String noteSearchHint = 'Cari catatan';
-  static const String noteAdd = 'Tambah catatan';
   static const String noteTitleRequired = 'Judul catatan wajib diisi';
   static const String noNoteContent = 'Tanpa isi';
   static const String noNotes = 'Belum ada catatan';

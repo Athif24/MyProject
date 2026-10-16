@@ -35,6 +35,14 @@ class IdDate {
   static String weekdayShort(DateTime date) =>
       DateFormat('E', 'id_ID').format(date);
 
+  /// Tanggal ISO `YYYY-MM-DD` untuk parameter `?date=` pada rute form.
+  static String isoDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
   /// Rentang tanggal ringkas: `14 Okt` bila sama, `14 – 20 Okt` bila satu bulan,
   /// atau `28 Sep – 3 Okt` bila berbeda bulan.
   static String range(DateTime? start, DateTime? end) {

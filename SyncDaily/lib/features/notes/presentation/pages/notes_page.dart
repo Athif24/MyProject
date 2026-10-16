@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/app_typography.dart';
-import 'package:sync_daily/core/widgets/app_add_button.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
 import 'package:sync_daily/core/widgets/app_search_field.dart';
 import 'package:sync_daily/core/widgets/empty_state.dart';
@@ -21,8 +19,11 @@ import 'package:sync_daily/features/notes/presentation/widgets/note_detail_flow.
 import 'package:sync_daily/features/notes/presentation/widgets/note_labels.dart';
 import 'package:sync_daily/features/notes/presentation/widgets/note_tile.dart';
 
-/// Layar Catatan: judul + tombol tambah dan ganti tampilan, kolom cari, chip
-/// kategori, lalu grid dua kolom (atau daftar) kartu catatan pastel.
+/// Layar Catatan: judul dan tombol ganti tampilan, kolom cari, chip kategori,
+/// lalu grid dua kolom (atau daftar) kartu catatan pastel.
+///
+/// Penambahan catatan lewat panel "Buat Baru" (tombol + di navigasi bawah),
+/// bukan tombol tambah di layar ini.
 ///
 /// TODO(design): rincian layar Catatan (ukuran kartu, jarak, dan gaya label)
 /// belum ada; memakai komponen dan token theme sampai desain tersedia.
@@ -82,7 +83,6 @@ class _NotesView extends StatelessWidget {
                     onQueryChanged: context.read<NotesCubit>().setQuery,
                     onCategoryChanged: context.read<NotesCubit>().setCategory,
                     onToggleView: context.read<NotesCubit>().toggleViewMode,
-                    onAdd: () => context.push('/notes/new'),
                     onOpenDetail: (note) => _openDetail(context, note),
                   );
               }
@@ -96,8 +96,8 @@ class _NotesView extends StatelessWidget {
 
 /// Isi Catatan yang sudah termuat.
 ///
-/// Judul, tombol tambah/ganti tampilan, kolom cari, dan chip kategori tetap di
-/// atas; hanya grid/daftar catatan yang bergulir. Bila sisa ruang untuk daftar
+/// Judul, tombol ganti tampilan, kolom cari, dan chip kategori tetap di atas;
+/// hanya grid/daftar catatan yang bergulir. Bila sisa ruang untuk daftar
 /// terlalu kecil (< [_minListHeight]), seluruh halaman bergulir seperti pola
 /// Kalender supaya tidak ada isi yang terpotong; peralihan itu hanya dilakukan
 /// setelah bagian tetap terukur, jadi frame pertama sudah memakai tata letak
@@ -107,7 +107,6 @@ class _LoadedView extends StatefulWidget {
   final ValueChanged<String> onQueryChanged;
   final ValueChanged<NoteCategory?> onCategoryChanged;
   final VoidCallback onToggleView;
-  final VoidCallback onAdd;
   final ValueChanged<Note> onOpenDetail;
 
   const _LoadedView({
@@ -115,7 +114,6 @@ class _LoadedView extends StatefulWidget {
     required this.onQueryChanged,
     required this.onCategoryChanged,
     required this.onToggleView,
-    required this.onAdd,
     required this.onOpenDetail,
   });
 
@@ -173,8 +171,7 @@ class _LoadedViewState extends State<_LoadedView> {
     });
   }
 
-  /// Bagian tetap: judul, tombol tambah/ganti tampilan, kolom cari, dan chip
-  /// kategori.
+  /// Bagian tetap: judul, tombol ganti tampilan, kolom cari, dan chip kategori.
   Widget _fixedPart() {
     final isGrid = widget.state.viewMode == NotesViewMode.grid;
     return KeyedSubtree(
@@ -190,11 +187,6 @@ class _LoadedViewState extends State<_LoadedView> {
                   style: AppTypography.textTheme.displayMedium,
                 ),
               ),
-              AppAddButton(
-                semanticLabel: AppStrings.noteAdd,
-                onTap: widget.onAdd,
-              ),
-              const SizedBox(width: AppSizes.itemSpacing),
               AppIconButton(
                 icon: noteViewModeIcon(isGrid),
                 semanticLabel: noteViewModeLabel(isGrid),

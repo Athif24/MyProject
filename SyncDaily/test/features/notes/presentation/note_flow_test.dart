@@ -6,7 +6,8 @@ import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
-import 'package:sync_daily/core/widgets/app_add_button.dart';
+import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
+import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
 import 'package:sync_daily/features/notes/domain/entities/note.dart';
 import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
 import 'package:sync_daily/features/notes/presentation/widgets/note_card.dart';
@@ -60,6 +61,25 @@ void main() {
         matching: find.text(title),
       );
 
+  /// Membuka form catatan baru lewat satu-satunya pintu tambah: tombol + di
+  /// navigasi bawah, lalu ubin Catatan pada panel "Buat Baru".
+  Future<void> openNoteForm(WidgetTester tester) async {
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppBottomNav),
+        matching: find.byIcon(AppIcons.add),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppNewItemPanel),
+        matching: find.text(AppStrings.newPanelNote),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+
   Finder searchField() => find.byType(TextField);
 
   /// Node fokus kolom cari di layar Catatan.
@@ -82,9 +102,8 @@ void main() {
     expect(searchFocusNode(tester).hasFocus, isTrue);
     expect(tester.testTextInput.isVisible, isTrue);
 
-    // Buat catatan baru, lalu simpan.
-    await tester.tap(find.byType(AppAddButton));
-    await tester.pumpAndSettle();
+    // Buat catatan baru lewat panel "Buat Baru", lalu simpan.
+    await openNoteForm(tester);
     await tester.enterText(find.byType(TextField).at(0), 'Beli buku');
     await tester.tap(find.text(AppStrings.save));
     await tester.pumpAndSettle();
@@ -132,9 +151,8 @@ void main() {
     await pumpNotes(tester);
     expect(find.text(AppStrings.noNotes), findsOneWidget);
 
-    // --- Buat catatan baru lewat tombol + ungu.
-    await tester.tap(find.byType(AppAddButton));
-    await tester.pumpAndSettle();
+    // --- Buat catatan baru lewat tombol + navigasi lalu ubin Catatan.
+    await openNoteForm(tester);
     expect(find.text(AppStrings.noteNew), findsOneWidget);
     expect(find.text(AppStrings.save), findsOneWidget);
     expect(find.byIcon(AppIcons.back), findsOneWidget);
@@ -215,8 +233,7 @@ void main() {
       (tester) async {
     await pumpNotes(tester);
 
-    await tester.tap(find.byType(AppAddButton));
-    await tester.pumpAndSettle();
+    await openNoteForm(tester);
     await tester.enterText(find.byType(TextField).at(1), 'Hanya isi');
     await tester.tap(find.text(AppStrings.save));
     await tester.pumpAndSettle();

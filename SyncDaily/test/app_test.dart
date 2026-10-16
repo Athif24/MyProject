@@ -6,11 +6,9 @@ import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/greeting.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
-import 'package:sync_daily/core/widgets/app_add_button.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
 import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
-import 'package:sync_daily/features/calendar/presentation/widgets/calendar_add_button.dart';
 import 'package:sync_daily/main.dart';
 
 import 'helpers/test_dependencies.dart';
@@ -125,8 +123,9 @@ void main() {
       isFalse,
     );
 
-    // Tiap tab shell: tidak ada ikon header atau tombol + yang tertutup FAB
-    // (lonceng Beranda, ganti tampilan Catatan, panah bulan & + Kalender).
+    // Tiap tab shell: tidak ada ikon header yang tertutup FAB (lonceng
+    // Beranda, ganti tampilan Catatan, panah bulan Kalender). Tombol tambah
+    // ungu lama sudah dihapus, jadi tinggal ikon header yang harus aman.
     for (final tab in const [
       Icons.home_outlined,
       Icons.chat_bubble_outline,
@@ -136,19 +135,13 @@ void main() {
       await tester.tap(find.byIcon(tab));
       await tester.pumpAndSettle();
 
-      final targets = find.byWidgetPredicate(
-        (widget) =>
-            widget is AppIconButton ||
-            widget is AppAddButton ||
-            widget is CalendarAddButton,
-      );
-      for (final target in targets.evaluate()) {
+      for (final target in find.byType(AppIconButton).evaluate()) {
         expect(
           fab.overlaps(
             tester.getRect(find.byElementPredicate((e) => e == target)),
           ),
           isFalse,
-          reason: 'FAB menutupi ikon/tombol pada tab $tab',
+          reason: 'FAB menutupi ikon header pada tab $tab',
         );
       }
     }

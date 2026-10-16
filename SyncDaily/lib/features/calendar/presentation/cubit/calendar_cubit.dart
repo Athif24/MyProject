@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:sync_daily/core/state/calendar_selection.dart';
 import 'package:sync_daily/features/calendar/domain/calendar_agenda.dart';
 import 'package:sync_daily/features/calendar/domain/calendar_grid.dart';
 import 'package:sync_daily/features/calendar/presentation/cubit/calendar_state.dart';
@@ -19,6 +20,9 @@ import 'package:sync_daily/features/tasks/domain/repositories/task_repository.da
 class CalendarCubit extends Cubit<CalendarState> {
   final TaskRepository _taskRepository;
 
+  /// Cermin tanggal terpilih untuk panel "Buat Baru" (lihat [CalendarSelection]).
+  final CalendarSelection _selection;
+
   /// Sumber waktu; bisa diganti pada pengujian.
   final DateTime Function() _now;
 
@@ -36,8 +40,10 @@ class CalendarCubit extends Cubit<CalendarState> {
 
   CalendarCubit({
     required TaskRepository taskRepository,
+    required CalendarSelection selection,
     DateTime Function()? now,
   })  : _taskRepository = taskRepository,
+        _selection = selection,
         _now = now ?? DateTime.now,
         super(_initialState(now ?? DateTime.now));
 
@@ -52,6 +58,10 @@ class CalendarCubit extends Cubit<CalendarState> {
 
   /// Berlangganan data item dan aturan pengulangan.
   void start() {
+    // Tanggal terpilih sudah diketahui sejak awal (bukan dari stream data),
+    // jadi panel "Buat Baru" sudah dapat memakainya walau agenda masih dimuat.
+    _selection.select(state.selectedDate);
+
     unawaited(_tasksSub?.cancel());
     unawaited(_recurrencesSub?.cancel());
 
@@ -148,6 +158,8 @@ class CalendarCubit extends Cubit<CalendarState> {
     final month = visibleMonth ?? state.visibleMonth;
     final selected = selectedDate ?? state.selectedDate;
     final failed = _tasksFailed || _recurrencesFailed;
+
+    _selection.select(selected);
 
     emit(
       state.copyWith(

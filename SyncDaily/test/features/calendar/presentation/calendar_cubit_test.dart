@@ -2,6 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:sync_daily/core/database/app_database.dart';
+import 'package:sync_daily/core/state/calendar_selection.dart';
 import 'package:sync_daily/features/calendar/presentation/cubit/calendar_cubit.dart';
 import 'package:sync_daily/features/calendar/presentation/cubit/calendar_state.dart';
 import 'package:sync_daily/features/tasks/data/repositories/task_repository_impl.dart';
@@ -18,12 +19,16 @@ void main() {
   late AppDatabase db;
   late TaskRepository taskRepo;
 
+  /// Cermin tanggal terpilih yang diisi cubit (untuk panel "Buat Baru").
+  late CalendarSelection selection;
+
   final fixedNow = DateTime(2026, 10, 14, 8, 30);
   final ts = DateTime.utc(2026, 1, 1);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     taskRepo = TaskRepositoryImpl(db.tasksDao, db.projectsDao);
+    selection = CalendarSelection();
   });
 
   tearDown(() async {
@@ -32,6 +37,7 @@ void main() {
 
   CalendarCubit buildCubit({DateTime? now}) => CalendarCubit(
         taskRepository: taskRepo,
+        selection: selection,
         now: () => now ?? fixedNow,
       );
 
@@ -355,6 +361,7 @@ void main() {
 
     final cubit = CalendarCubit(
       taskRepository: failing,
+      selection: selection,
       now: () => fixedNow,
     )..start();
     await settle();
@@ -367,5 +374,35 @@ void main() {
     await settle();
 
     await cubit.close();
+  });
+
+  group('cermin tanggal terpilih (untuk panel "Buat Baru")', () {
+    test('start menuliskan tanggal terpilih tanpa menunggu data', () async {
+      final cubit = buildCubit()..start();
+
+      // Hari ini menurut jam injeksi: sudah tersedia walau stream belum
+      // sempat mengirim apa-apa.
+      expect(selection.selectedDate, DateTime(2026, 10, 14));
+
+      await cubit.close();
+    });
+
+    test('memilih tanggal dan menggeser bulan ikut menuliskan tanggal',
+        () async {
+      final cubit = buildCubit()..start();
+
+      // Pemilihan pada jam 15.45: cermin menyimpan tanggalnya saja (jam
+      // dibuang) sehingga ubin panel membawa tanggal Kalender, bukan jam itu.
+      cubit.selectDate(DateTime(2026, 10, 20, 15, 45));
+      expect(selection.selectedDate, DateTime(2026, 10, 20));
+
+      cubit.previousMonth();
+      expect(selection.selectedDate, DateTime(2026, 9, 20));
+
+      cubit.nextMonth();
+      expect(selection.selectedDate, DateTime(2026, 10, 20));
+
+      await cubit.close();
+    });
   });
 }

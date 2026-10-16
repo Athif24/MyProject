@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:sync_daily/core/di/injection.dart';
+import 'package:sync_daily/core/state/calendar_selection.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_sizes.dart';
 import 'package:sync_daily/core/theme/app_typography.dart';
@@ -11,7 +11,6 @@ import 'package:sync_daily/core/widgets/latar_layar.dart';
 import 'package:sync_daily/core/widgets/section_header.dart';
 import 'package:sync_daily/features/calendar/presentation/cubit/calendar_cubit.dart';
 import 'package:sync_daily/features/calendar/presentation/cubit/calendar_state.dart';
-import 'package:sync_daily/features/calendar/presentation/widgets/calendar_add_button.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_item_tile.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_month_grid.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
@@ -31,6 +30,7 @@ class CalendarPage extends StatelessWidget {
     return BlocProvider(
       create: (_) => CalendarCubit(
         taskRepository: getIt<TaskRepository>(),
+        selection: getIt<CalendarSelection>(),
       )..start(),
       child: const _CalendarView(),
     );
@@ -59,11 +59,6 @@ class _CalendarView extends StatelessWidget {
     );
   }
 
-  /// Membuka form "Buat baru" dengan tanggal terpilih sudah terisi.
-  void _openNewItem(BuildContext context, DateTime date) {
-    context.push('/tasks/new?date=${_isoDate(date)}');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +80,6 @@ class _CalendarView extends StatelessWidget {
                     onSelectDate: context.read<CalendarCubit>().selectDate,
                     onPreviousMonth: context.read<CalendarCubit>().previousMonth,
                     onNextMonth: context.read<CalendarCubit>().nextMonth,
-                    onAdd: () => _openNewItem(context, state.selectedDate),
                     onOpenDetail: (task) => _openDetail(context, task),
                     onToggleSubtasks:
                         context.read<CalendarCubit>().toggleSubtasks,
@@ -101,18 +95,17 @@ class _CalendarView extends StatelessWidget {
 
 /// Isi Kalender yang sudah termuat.
 ///
-/// Grid bulan (termasuk nama bulan dan tombolnya), judul seksi, dan tombol
-/// tambah tetap di atas; hanya daftar agenda yang bergulir. Bila sisa ruang
-/// untuk daftar agenda terlalu kecil (< [_minAgendaHeight]), seluruh halaman
-/// bergulir seperti sebelumnya supaya layar pendek tidak terpotong; peralihan
-/// itu hanya dilakukan setelah bagian tetap terukur, jadi frame pertama sudah
-/// memakai tata letak yang mengisi penuh.
+/// Grid bulan (termasuk nama bulan dan tombolnya) dan judul seksi tetap di
+/// atas; hanya daftar agenda yang bergulir. Bila sisa ruang untuk daftar agenda
+/// terlalu kecil (< [_minAgendaHeight]), seluruh halaman bergulir seperti
+/// sebelumnya supaya layar pendek tidak terpotong; peralihan itu hanya
+/// dilakukan setelah bagian tetap terukur, jadi frame pertama sudah memakai
+/// tata letak yang mengisi penuh.
 class _LoadedView extends StatefulWidget {
   final CalendarState state;
   final ValueChanged<DateTime> onSelectDate;
   final VoidCallback onPreviousMonth;
   final VoidCallback onNextMonth;
-  final VoidCallback onAdd;
   final ValueChanged<Task> onOpenDetail;
   final ValueChanged<String> onToggleSubtasks;
 
@@ -121,7 +114,6 @@ class _LoadedView extends StatefulWidget {
     required this.onSelectDate,
     required this.onPreviousMonth,
     required this.onNextMonth,
-    required this.onAdd,
     required this.onOpenDetail,
     required this.onToggleSubtasks,
   });
@@ -180,8 +172,11 @@ class _LoadedViewState extends State<_LoadedView> {
     });
   }
 
-  /// Bagian tetap: judul layar, grid bulan, dan judul seksi beserta tombol
-  /// tambah.
+  /// Bagian tetap: judul layar, grid bulan, dan judul seksi.
+  ///
+  /// Judul seksi dipertahankan setinggi target sentuh minimum supaya tinggi
+  /// bagian tetap tidak berubah setelah tombol tambahnya dihapus: agenda tidak
+  /// bergeser dan ambang tata letak layar pendek tetap sama.
   Widget _fixedPart() {
     return KeyedSubtree(
       key: _fixedKey,
@@ -202,9 +197,11 @@ class _LoadedViewState extends State<_LoadedView> {
             onNextMonth: widget.onNextMonth,
           ),
           const SizedBox(height: AppSizes.sectionGap),
-          SectionHeader(
-            title: _sectionTitle(widget.state),
-            trailing: CalendarAddButton(onTap: widget.onAdd),
+          ConstrainedBox(
+            constraints: const BoxConstraints(
+              minHeight: AppSizes.minTouchTarget,
+            ),
+            child: SectionHeader(title: _sectionTitle(widget.state)),
           ),
         ],
       ),
@@ -315,14 +312,6 @@ class _Agenda extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Tanggal ISO (`YYYY-MM-DD`) untuk parameter `?date=` pada rute form.
-String _isoDate(DateTime date) {
-  final year = date.year.toString().padLeft(4, '0');
-  final month = date.month.toString().padLeft(2, '0');
-  final day = date.day.toString().padLeft(2, '0');
-  return '$year-$month-$day';
 }
 
 class _ErrorState extends StatelessWidget {
