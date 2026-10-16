@@ -16,6 +16,7 @@ import 'package:sync_daily/features/notes/domain/repositories/note_repository.da
 import 'package:sync_daily/main.dart';
 
 import 'helpers/fake_note_repository.dart';
+import 'helpers/reset_app_state.dart';
 import 'helpers/test_dependencies.dart';
 import 'helpers/test_repositories.dart';
 
@@ -43,6 +44,7 @@ void main() {
   });
 
   setUp(() async {
+    await resetGlobalTestState();
     db = await setUpInMemoryDependencies();
     registerMockRepositories();
     noteRepository = FakeNoteRepository();

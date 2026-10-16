@@ -20,6 +20,8 @@ import 'package:sync_daily/features/projects/domain/repositories/project_reposit
 import 'package:sync_daily/features/tasks/domain/entities/task_summary.dart';
 import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
 
+import 'helpers/reset_app_state.dart';
+
 class _MockTaskRepository extends Mock implements TaskRepository {}
 
 class _MockProjectRepository extends Mock implements ProjectRepository {}
@@ -82,7 +84,7 @@ void main() {
 
     stubHappyPath();
 
-    await getIt.reset();
+    await resetGlobalTestState();
     getIt.registerSingleton<TaskRepository>(taskRepository);
     getIt.registerSingleton<ProjectRepository>(projectRepository);
     getIt.registerSingleton<NotificationRepository>(notificationRepository);

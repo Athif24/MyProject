@@ -11,6 +11,7 @@ import 'package:sync_daily/core/widgets/app_icon_button.dart';
 import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
 import 'package:sync_daily/main.dart';
 
+import 'helpers/reset_app_state.dart';
 import 'helpers/test_dependencies.dart';
 import 'helpers/test_repositories.dart';
 
@@ -22,6 +23,9 @@ void main() {
   });
 
   setUp(() async {
+    // Router dan singleton get_it hidup selama satu berkas tes: bersihkan dulu
+    // supaya tes ini tidak mewarisi lokasi rute/keadaan sesi tes sebelumnya.
+    await resetGlobalTestState();
     db = await setUpInMemoryDependencies();
     registerMockRepositories();
   });

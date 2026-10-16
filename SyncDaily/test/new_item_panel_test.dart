@@ -21,6 +21,7 @@ import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
 import 'package:sync_daily/features/tasks/domain/repositories/task_repository.dart';
 import 'package:sync_daily/main.dart';
 
+import 'helpers/reset_app_state.dart';
 import 'helpers/test_dependencies.dart';
 import 'helpers/test_repositories.dart';
 
@@ -57,6 +58,7 @@ void main() {
   });
 
   setUp(() async {
+    await resetGlobalTestState();
     db = await setUpInMemoryDependencies();
     registerMockRepositories();
   });

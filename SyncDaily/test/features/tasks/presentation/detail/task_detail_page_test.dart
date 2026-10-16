@@ -11,6 +11,7 @@ import 'package:sync_daily/features/tasks/domain/repositories/task_repository.da
 import 'package:sync_daily/features/tasks/presentation/detail/pages/task_detail_page.dart';
 import 'package:sync_daily/features/tasks/presentation/widgets/task_labels.dart';
 
+import '../../../../helpers/reset_app_state.dart';
 import '../../../../helpers/test_repositories.dart';
 
 /// Judul layar detail mengikuti tipe item (kapital di awal tiap kata, EYD).
@@ -21,7 +22,8 @@ void main() {
     await IdDate.ensureInitialized();
   });
 
-  setUp(() {
+  setUp(() async {
+    await resetGlobalTestState();
     registerMockRepositories();
     taskRepository = MockTaskRepository();
   });
