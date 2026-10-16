@@ -16,7 +16,12 @@ class AppTheme {
         onSurface: AppColors.ink,
         outline: AppColors.border,
       ),
-      scaffoldBackgroundColor: Colors.transparent,
+      // Warna opak senada ujung gradien halaman. Setiap Scaffold tetap diberi
+      // latar gradien penuh lewat `LayarLatar` sebagai body, jadi warna ini
+      // tidak terlihat di layar mana pun. Fungsinya hanya jaring pengaman:
+      // kalau ada celah yang tidak terlukis (mis. saat transisi atau saat
+      // papan tombol muncul), celah itu tampil putih, bukan hitam.
+      scaffoldBackgroundColor: AppColors.pageBackgroundEnd,
       textTheme: AppTypography.textTheme,
       extensions: const <ThemeExtension>[
         AppCategoryColors.defaultValue,

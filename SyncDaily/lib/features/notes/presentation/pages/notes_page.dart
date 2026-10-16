@@ -98,7 +98,10 @@ class _NotesView extends StatelessWidget {
 ///
 /// Judul, tombol tambah/ganti tampilan, kolom cari, dan chip kategori tetap di
 /// atas; hanya grid/daftar catatan yang bergulir. Bila sisa ruang untuk daftar
-/// terlalu kecil (< [_minListHeight]), seluruh halaman bergulir.
+/// terlalu kecil (< [_minListHeight]), seluruh halaman bergulir seperti pola
+/// Kalender supaya tidak ada isi yang terpotong; peralihan itu hanya dilakukan
+/// setelah bagian tetap terukur, jadi frame pertama sudah memakai tata letak
+/// yang mengisi penuh.
 class _LoadedView extends StatefulWidget {
   final NotesState state;
   final ValueChanged<String> onQueryChanged;
@@ -134,10 +137,16 @@ class _LoadedViewState extends State<_LoadedView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = _fixedHeight;
-        final listSpace = height == null
-            ? 0.0
-            : constraints.maxHeight - height - AppSizes.cardGap;
-        if (listSpace < _minListHeight) {
+        // Sebelum bagian tetap terukur (frame pertama), pakai tata letak yang
+        // mengisi penuh. Kalau tidak, frame pertama memakai tata letak yang
+        // seluruh halamannya bergulir: latar menyusut (terlihat sebagai kilatan
+        // gelap di bawah) dan teks keadaan kosong tampak "terangkat" sebelum
+        // kembali ke tengah. Peralihan ke seluruh halaman bergulir hanya
+        // dilakukan setelah tinggi terukur dan sisa ruang untuk daftar
+        // benar-benar kurang dari [_minListHeight].
+        if (height != null &&
+            constraints.maxHeight - height - AppSizes.cardGap <
+                _minListHeight) {
           return _scrollingLayout();
         }
         return _fixedLayout();

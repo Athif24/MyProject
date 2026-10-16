@@ -104,7 +104,9 @@ class _CalendarView extends StatelessWidget {
 /// Grid bulan (termasuk nama bulan dan tombolnya), judul seksi, dan tombol
 /// tambah tetap di atas; hanya daftar agenda yang bergulir. Bila sisa ruang
 /// untuk daftar agenda terlalu kecil (< [_minAgendaHeight]), seluruh halaman
-/// bergulir seperti sebelumnya supaya layar pendek tidak terpotong.
+/// bergulir seperti sebelumnya supaya layar pendek tidak terpotong; peralihan
+/// itu hanya dilakukan setelah bagian tetap terukur, jadi frame pertama sudah
+/// memakai tata letak yang mengisi penuh.
 class _LoadedView extends StatefulWidget {
   final CalendarState state;
   final ValueChanged<DateTime> onSelectDate;
@@ -142,10 +144,14 @@ class _LoadedViewState extends State<_LoadedView> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final height = _fixedHeight;
-        final agendaSpace = height == null
-            ? 0.0
-            : constraints.maxHeight - height - AppSizes.cardGap;
-        if (agendaSpace < _minAgendaHeight) {
+        // Sebelum bagian tetap terukur (frame pertama), pakai tata letak yang
+        // mengisi penuh supaya tidak ada frame peralihan yang menyusutkan latar.
+        // Peralihan ke seluruh halaman bergulir hanya setelah tinggi terukur
+        // dan sisa ruang untuk agenda benar-benar kurang dari
+        // [_minAgendaHeight].
+        if (height != null &&
+            constraints.maxHeight - height - AppSizes.cardGap <
+                _minAgendaHeight) {
           return _scrollingLayout();
         }
         return _fixedLayout();
