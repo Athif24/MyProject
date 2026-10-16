@@ -40,4 +40,7 @@ class AppIcons {
   /// Panah buka/tutup daftar subtugas di kartu agenda Kalender. Diputar 180
   /// derajat oleh widget saat daftarnya terbuka.
   static const IconData expand = Icons.expand_more;
+
+  /// Ubin "Acara" pada panel "Buat Baru".
+  static const IconData event = Icons.event_outlined;
 }

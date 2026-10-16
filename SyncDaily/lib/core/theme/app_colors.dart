@@ -26,6 +26,13 @@ class AppColors {
   static const unreadBg = Color(0xFFF3F0FF);
   static const unreadBorder = Color(0xFFE0D9FF);
 
+  // Lapisan panel "Buat Baru" (tombol + navigasi bawah).
+  //
+  // TODO(design): warna lapisan gelap panel belum dirinci di DESIGN.md;
+  // sementara memakai warna ink dengan kepekatan 40% agar tetap sewarna teks
+  // utama dan tombol hitam.
+  static const scrim = Color(0x66141318);
+
   // Category colors
   static const taskBg = Color(0xFFE7E1FF);
   static const taskIcon = Color(0xFF5B3FD6);

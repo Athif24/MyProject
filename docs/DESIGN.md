@@ -68,7 +68,7 @@ Font: Plus Jakarta Sans (400, 500, 600, 700, 800). Font DIBUNDEL di `assets/font
    - Lima kategori bawaan (tetap): Pribadi, Pekerjaan, Ide, Kuliah, Penting, ditambah pilihan tanpa kategori.
    - Warna kartu hanya mengikuti kategori (tidak ada pemilih warna di form) dan memakai token pastel yang sudah ada: Pribadi violet (taskBg/taskIcon), Pekerjaan biru (eventBg/eventIcon), Ide kuning (projectBg/projectIcon), Kuliah hijau (milestoneBg/milestoneIcon), Penting merah (deadlineBg/deadlineIcon), tanpa kategori pink (noteBg/noteIcon).
    - Sematan lewat toggle "Sematkan" pada form dan halaman detail. Kartu yang disematkan menampilkan ikon sematan dan selalu diurutkan lebih dulu, lalu yang paling baru diperbarui; pencarian mencocokkan judul atau isi dan digabung dengan filter kategori.
-5. **Buat baru**: latar gelap blur, panel bawah "Buat baru" berisi 6 ubin: Tugas, Acara, Pengingat, Milestone, Catatan, Proyek.
+5. **Buat baru**: latar gelap blur, panel bawah "Buat Baru" berisi 6 ubin: Tugas, Acara, Pengingat, Milestone, Catatan, Proyek. Ubin Proyek tidak aktif sampai fitur proyek dibuat.
 6. **Notifikasi**: tombol kembali, "Tandai dibaca", chip (Semua, Pengingat, Deadline, Pesan), dikelompokkan per hari. Notifikasi pengingat punya tombol aksi "Selesai" dan "Tunda 10 menit".
 
 ## Layar yang BELUM didesain

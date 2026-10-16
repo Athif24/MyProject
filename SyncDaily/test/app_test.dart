@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sync_daily/core/di/injection.dart';
 import 'package:sync_daily/core/database/app_database.dart';
-import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/greeting.dart';
@@ -10,6 +9,7 @@ import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_add_button.dart';
 import 'package:sync_daily/core/widgets/app_bottom_nav.dart';
 import 'package:sync_daily/core/widgets/app_icon_button.dart';
+import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
 import 'package:sync_daily/features/calendar/presentation/widgets/calendar_add_button.dart';
 import 'package:sync_daily/main.dart';
 
@@ -62,18 +62,20 @@ void main() {
     expect(find.text(Greeting.forTime(DateTime.now())), findsOneWidget);
   });
 
-  testWidgets('Tombol + membuka form buat baru', (tester) async {
+  testWidgets('Tombol + membuka panel Buat Baru', (tester) async {
     await tester.pumpWidget(const SyncDailyApp());
     await tester.pumpAndSettle();
 
     await tester.tap(find.byIcon(AppIcons.add));
     await tester.pumpAndSettle();
-    expect(find.text(AppStrings.newItem), findsOneWidget);
+    expect(find.text(AppStrings.newPanelTitle), findsOneWidget);
+    expect(find.byType(AppNewItemPanel), findsOneWidget);
 
-    // Router bersifat global antar tes: tutup form agar tes berikutnya mulai
+    // Router bersifat global antar tes: tutup panel agar tes berikutnya mulai
     // dari Beranda.
-    AppRouter.router.pop();
+    await tester.tap(find.byIcon(AppIcons.add));
     await tester.pumpAndSettle();
+    expect(find.text(AppStrings.newPanelTitle), findsNothing);
     expect(find.byType(AppBottomNav), findsOneWidget);
   });
 

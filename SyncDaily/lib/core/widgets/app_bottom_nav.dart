@@ -23,7 +23,12 @@ class AppBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        padding: const EdgeInsets.fromLTRB(
+          AppSizes.navHorizontalMargin,
+          0,
+          AppSizes.navHorizontalMargin,
+          AppSizes.navBottomMargin,
+        ),
         child: Container(
           height: AppSizes.navHeight,
           decoration: BoxDecoration(

@@ -7,6 +7,7 @@ import 'package:sync_daily/core/router/app_router.dart';
 import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
+import 'package:sync_daily/core/widgets/app_new_item_panel.dart';
 import 'package:sync_daily/features/projects/domain/repositories/project_repository.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task.dart';
 import 'package:sync_daily/features/tasks/domain/entities/task_enums.dart';
@@ -99,8 +100,15 @@ void main() {
     await tester.pumpWidget(const SyncDailyApp());
     await tester.pumpAndSettle();
 
-    // Tombol + di nav membuka form.
+    // Tombol + membuka panel "Buat Baru", lalu ubin Tugas membuka form.
     await tester.tap(find.byIcon(AppIcons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppNewItemPanel),
+        matching: find.text(AppStrings.newPanelTask),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.newItem), findsOneWidget);
 
@@ -121,8 +129,15 @@ void main() {
     await tester.pumpWidget(const SyncDailyApp());
     await tester.pumpAndSettle();
 
-    // Tombol + di nav membuka form.
+    // Tombol + membuka panel "Buat Baru", lalu ubin Tugas membuka form.
     await tester.tap(find.byIcon(AppIcons.add));
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AppNewItemPanel),
+        matching: find.text(AppStrings.newPanelTask),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text(AppStrings.newItem), findsOneWidget);
 

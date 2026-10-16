@@ -19,6 +19,15 @@ class AppStrings {
   static const String navClose = 'Tutup';
   static const String unreadIndicator = 'Belum dibaca';
 
+  // Panel "Buat Baru" yang dibuka tombol + pada navigasi bawah.
+  static const String newPanelTitle = 'Buat Baru';
+  static const String newPanelTask = 'Tugas';
+  static const String newPanelEvent = 'Acara';
+  static const String newPanelReminder = 'Pengingat';
+  static const String newPanelMilestone = 'Milestone';
+  static const String newPanelNote = 'Catatan';
+  static const String newPanelProject = 'Proyek';
+
   // Beranda: header dan judul seksi.
   static const String notifications = 'Notifikasi';
   static const String overview = 'Ringkasan';
