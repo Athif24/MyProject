@@ -7,6 +7,7 @@ import 'package:sync_daily/core/strings/app_strings.dart';
 import 'package:sync_daily/core/theme/app_icons.dart';
 import 'package:sync_daily/core/utils/id_date.dart';
 import 'package:sync_daily/core/widgets/app_add_button.dart';
+import 'package:sync_daily/features/notes/domain/entities/note.dart';
 import 'package:sync_daily/features/notes/domain/repositories/note_repository.dart';
 import 'package:sync_daily/features/notes/presentation/widgets/note_card.dart';
 import 'package:sync_daily/main.dart';
@@ -60,6 +61,72 @@ void main() {
       );
 
   Finder searchField() => find.byType(TextField);
+
+  /// Node fokus kolom cari di layar Catatan.
+  FocusNode searchFocusNode(WidgetTester tester) => tester
+      .widget<EditableText>(
+        find.descendant(
+          of: searchField(),
+          matching: find.byType(EditableText),
+        ),
+      )
+      .focusNode;
+
+  testWidgets('kolom cari lepas fokus dan keyboard setelah menyimpan catatan',
+      (tester) async {
+    await pumpNotes(tester);
+
+    // Kolom cari difokuskan lebih dulu supaya keyboard terbuka.
+    await tester.tap(searchField());
+    await tester.pumpAndSettle();
+    expect(searchFocusNode(tester).hasFocus, isTrue);
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    // Buat catatan baru, lalu simpan.
+    await tester.tap(find.byType(AppAddButton));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).at(0), 'Beli buku');
+    await tester.tap(find.text(AppStrings.save));
+    await tester.pumpAndSettle();
+
+    // Kembali di layar Catatan: fokus tidak dipulihkan, keyboard tidak muncul.
+    expect(cardWith('Beli buku'), findsOneWidget);
+    expect(searchFocusNode(tester).hasFocus, isFalse);
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
+
+  testWidgets('kolom cari lepas fokus dan keyboard setelah kembali dari detail',
+      (tester) async {
+    final ts = DateTime.utc(2026, 10, 1, 8);
+    await noteRepository.upsertNote(Note(
+      id: 'n1',
+      title: 'Beli buku',
+      content: 'Buku kuliah',
+      createdAt: ts,
+      updatedAt: ts,
+    ));
+    await pumpNotes(tester);
+
+    // Kolom cari difokuskan lebih dulu supaya keyboard terbuka.
+    await tester.tap(searchField());
+    await tester.pumpAndSettle();
+    expect(searchFocusNode(tester).hasFocus, isTrue);
+    expect(tester.testTextInput.isVisible, isTrue);
+
+    // Buka detail lewat kartu: keyboard ikut tertutup.
+    await tester.tap(cardWith('Beli buku'));
+    await tester.pumpAndSettle();
+    expect(find.text(AppStrings.noteDetail), findsOneWidget);
+    expect(tester.testTextInput.isVisible, isFalse);
+
+    // Kembali ke daftar: fokus tidak dipulihkan, keyboard tidak muncul.
+    await tester.tap(find.byIcon(AppIcons.back));
+    await tester.pumpAndSettle();
+
+    expect(cardWith('Beli buku'), findsOneWidget);
+    expect(searchFocusNode(tester).hasFocus, isFalse);
+    expect(tester.testTextInput.isVisible, isFalse);
+  });
 
   testWidgets('buat, cari, ubah, lalu hapus dan urungkan', (tester) async {
     await pumpNotes(tester);

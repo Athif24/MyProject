@@ -28,6 +28,12 @@ class AppShell extends StatelessWidget {
       // Tombol sementara untuk membuka galeri komponen. Hanya ada saat debug
       // (kDebugMode konstanta -> dihapus saat build rilis), jadi tidak muncul
       // di build produksi.
+      //
+      // Ditaruh kecil di kiri bawah, tepat di atas navigasi bawah: sudut kanan
+      // atas dipakai ikon header (ganti tampilan Catatan, lonceng Beranda, panah
+      // bulan Kalender), sedangkan bawah-tengah dipakai tombol + ungu pada
+      // navigasi. Tombol + ungu Catatan/Kalender ada di dalam isi layar
+      // (bukan di sini), jadi tidak tertutup.
       floatingActionButton: kDebugMode
           ? FloatingActionButton.small(
               heroTag: 'debug-gallery-fab',
@@ -36,7 +42,7 @@ class AppShell extends StatelessWidget {
               child: const Icon(Icons.widgets_outlined),
             )
           : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
+      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
       bottomNavigationBar: AppBottomNav(
         currentIndex: currentIndex,
         onTap: (index) {

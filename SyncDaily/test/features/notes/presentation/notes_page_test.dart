@@ -98,12 +98,12 @@ void main() {
 
   /// Ketuk tombol ganti tampilan (satu-satunya [AppIconButton] di layar ini).
   ///
-  /// Ditepuk di sisi kiri tombol karena FAB galeri komponen (hanya ada saat
-  /// `kDebugMode`, lihat `AppShell`) menumpuk di sudut kanan atas layar; di
-  /// build rilis tidak ada FAB sehingga seluruh tombol bebas diketuk.
+  /// Diketuk di tengah tombol, seperti pengguna: FAB galeri komponen sudah
+  /// dipindah ke kiri bawah (lihat `AppShell`) sehingga tidak menutupi ikon di
+  /// header. Kalau FAB menutupinya lagi, ketukan ini tidak mengubah tampilan
+  /// dan tes gagal.
   Future<void> tapViewToggle(WidgetTester tester) async {
-    final rect = tester.getRect(find.byType(AppIconButton));
-    await tester.tapAt(Offset(rect.left + 3, rect.center.dy));
+    await tester.tap(find.byType(AppIconButton));
     await tester.pumpAndSettle();
   }
 
@@ -243,6 +243,34 @@ void main() {
 
       expect(find.text(AppStrings.noteNew), findsOneWidget);
     });
+  });
+
+  group('tombol galeri debug', () {
+    // 400 x 800 dan 320 x 640 dp (dengan devicePixelRatio 3 dari [pumpNotes]).
+    for (final size in const [Size(400, 800), Size(320, 640)]) {
+      testWidgets(
+          'ikon ganti tampilan dapat diketuk pada '
+          '${size.width.round()} x ${size.height.round()}', (tester) async {
+        await noteRepository.upsertNote(makeNote('n1', title: 'Ide aplikasi'));
+
+        await pumpNotes(tester, physicalSize: size * 3);
+
+        // FAB galeri debug pindah ke kiri bawah: tidak lagi menutupi ikon
+        // ganti tampilan maupun tombol + di header.
+        final fab = tester.getRect(find.byType(FloatingActionButton));
+        expect(
+          fab.overlaps(tester.getRect(find.byType(AppIconButton))),
+          isFalse,
+        );
+        expect(fab.overlaps(tester.getRect(find.byType(AppAddButton))), isFalse);
+
+        // Ketukan di tengah ikon mengubah tampilan -> tidak tertutup FAB.
+        await tapViewToggle(tester);
+
+        expect(find.byType(NoteTile), findsOneWidget);
+        expect(find.byType(NoteCard), findsNothing);
+      });
+    }
   });
 
   group('penyaringan', () {

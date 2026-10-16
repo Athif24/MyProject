@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sync_daily/core/router/app_route_observer.dart';
 import 'package:sync_daily/core/router/app_shell.dart';
 import 'package:sync_daily/features/calendar/presentation/pages/calendar_page.dart';
 import 'package:sync_daily/features/chat/presentation/pages/chat_page.dart';
@@ -22,6 +23,7 @@ class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
+    observers: [appRouteObserver],
     routes: [
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
